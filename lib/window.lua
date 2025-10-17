@@ -54,6 +54,15 @@ function finder_window:toggle()
     end
 end
 
+function finder_window:move_window(new_col)
+    if self:is_open() then
+        self:close()
+        self.config.col = new_col - self.config.width -- 147 - 50 == 97...
+        vim.print("new col is ".. self.config.col)
+        self:open()
+    end
+end
+
 function finder_window:attach_events()
     if self.window_events ~= nil then
         vim.api.nvim_buf_attach(self.window_buffer, true, self.window_events)

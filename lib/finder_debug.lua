@@ -9,7 +9,6 @@ end
 DEBUG_LEVELS = {DEBUG = 0, INFO = 1, WARNING = 2, ERROR = 3, OFF = 4}
 
 function finder_debug:debug_print(msg, variable)
-    vim.print("debg var is " ..vim.inspect(variable))
     self:finder_print(DEBUG_LEVELS.DEBUG, "[FINDER DBG]: ", msg, variable)
 end
 
