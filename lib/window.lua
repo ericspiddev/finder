@@ -4,10 +4,11 @@ finder_window.__index = finder_window
 
 finder_window.VALID_WINDOW_EVENTS = {"on_lines", "on_bytes", "on_changedtick", "on_detach", "on_reload"}
 
-function finder_window:new(window_buffer, window_config, should_enter, highlighter)
+function finder_window:new(window_buffer, window_config, width_percent, should_enter, highlighter)
     local obj = {
         window_buffer = window_buffer,
         config = window_config,
+        width_percent = width_percent,
         should_enter = should_enter or true,
         send_buffer = false, -- unused since we use lua cbs
         highlighter = highlighter,
@@ -72,8 +73,12 @@ end
 function finder_window:open()
     if not self:is_open() then
         Finder_Logger:debug_print("Opening window")
+        local window = vim.api.nvim_get_current_win()
+        self.config.width = math.floor(vim.api.nvim_win_get_width(window) * self.width_percent)
+        self.config.col = vim.api.nvim_win_get_width(window)
+        self.search_window = window
         self.win_id = vim.api.nvim_open_win(self.window_buffer, self.should_enter, self.config ) -- enter window upon opening it
-        Finder_Logger:debug_print("Win id is ", self.win_id)
+        --Finder_Logger:debug_print("Win id is ", self.win_id)
         self:attach_events() -- pass through like {on_lines: lines_handler}
     else
         Finder_Logger:debug_print("Attempted to open an already open window ignoring...")

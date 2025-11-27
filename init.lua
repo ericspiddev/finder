@@ -5,8 +5,8 @@ local M = {}
 
 function M.setup(config)
 
-    local win_config = {
     _G.Finder_Logger = require("plugins.custom.finder.lib.finder_debug"):new(config.debug_level, vim.print)
+    local search_bar_config = {
         relative='win',
         row=0,
         col=200, -- TODO: come back to me
@@ -22,17 +22,17 @@ function M.setup(config)
     }
 
     Finder_Logger:debug_print("window: making a new window with config ", win_config)
-    local win_buf = vim.api.nvim_create_buf(true, false) -- buflisted, scratch buffer
-    local hl_buf = vim.api.nvim_win_get_buf(0) -- get current window's buffer
-    local hl_win = vim.api.nvim_get_current_win()
+    local search_bar_buffer = vim.api.nvim_create_buf(true, false) -- buflisted, scratch buffer
+    local file_buffer = vim.api.nvim_win_get_buf(0) -- get current window's buffer
+    local file_window = vim.api.nvim_get_current_win()
     local hl_namespace = vim.api.nvim_create_namespace("finder")
-    M.highlighter = highlighter:new(hl_buf, hl_win, hl_namespace, "Search")
-    M.find_window = window:new(win_buf, win_config, true, M.highlighter)
-    M.find_window.highlighter:populate_hl_context(0)
+
+    M.highlighter = highlighter:new(file_buffer, file_window, hl_namespace, "Search")
+    M.find_window = window:new(search_bar_buffer, search_bar_config, config.width_percentage, true, M.highlighter)
+    M.find_window.highlighter:populate_hl_context(constants.window.CURRENT_WINDOW)
     M.window_events = events:new(window.VALID_WINDOW_EVENTS)
     M.window_events:add_event("on_lines", M.find_window, "on_lines_handler")
     M.find_window:set_event_handlers(M.window_events)
-
 
     M.main()
 end
