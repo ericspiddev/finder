@@ -1,12 +1,12 @@
-local events = require("finder.lib.events")
-local window = require("finder.lib.window")
-local highlighter = require("finder.lib.highlighter")
+local events = require("plugins.custom.finder.lib.events")
+local window = require("plugins.custom.finder.lib.window")
+local highlighter = require("plugins.custom.finder.lib.highlighter")
 local M = {}
 
 function M.setup(config)
 
-    _G.Finder_Logger = require("finder.lib.finder_debug"):new(config.debug_level, vim.print)
     local win_config = {
+    _G.Finder_Logger = require("plugins.custom.finder.lib.finder_debug"):new(config.debug_level, vim.print)
         relative='win',
         row=0,
         col=200, -- TODO: come back to me
