@@ -11,6 +11,9 @@ function M.setup(config)
         row=0,
         col=200, -- TODO: come back to me
         width=50,
+        zindex=1,
+        anchor='NE',
+        focusable=true,
         height=1,
         style="minimal",
         border={ "╔", "═","╗", "║", "╝", "═", "╚", "║" }, -- double border for now fix me later
