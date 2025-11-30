@@ -45,6 +45,10 @@ function M.next_match()
     end
 end
 
+function M.clear_search()
+    vim.api.nvim_buf_set_lines(M.find_window.window_buffer, 0, -1, false, {})
+end
+
 function M.toggle()
     M.find_window:toggle()
 end
@@ -63,6 +67,11 @@ function M.main()
     })
     vim.keymap.set('n', '<leader>f', M.toggle, {})
     vim.keymap.set('n', '<CR>', M.next_match, {
+        buffer = M.find_window.window_buffer,
+        nowait = true,
+        noremap = true,
+    })
+    vim.keymap.set('n', 'c', M.clear_search, {
         buffer = M.find_window.window_buffer,
         nowait = true,
         noremap = true,
