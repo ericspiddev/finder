@@ -62,7 +62,7 @@ function M.reset_search()
     M.highlighter:update_search_results(M.find_window.window_buffer, M.highlighter.match_index, M.highlighter.matches)
 end
 
-function M.clear_search()
+function M.finder_clear_search()
     vim.api.nvim_buf_set_lines(M.find_window.window_buffer, constants.lines.START, constants.lines.END,
                               true, constants.buffer.EMPTY_BUFFER)
 end
@@ -96,7 +96,7 @@ function M.main()
         nowait = true,
         noremap = true,
     })
-    vim.keymap.set('n', 'c', M.clear_search, {
+    vim.keymap.set('n', 'c', M.finder_clear_search, {
         buffer = M.find_window.window_buffer,
         nowait = true,
         noremap = true,
