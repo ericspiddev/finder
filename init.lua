@@ -33,23 +33,37 @@ function M.setup(config)
     M.window_events:add_event("on_lines", M.find_window, "on_lines_handler")
     M.find_window:set_event_handlers(M.window_events)
 
+
     M.main()
 end
 
-function M.next_match()
+
+function M.previous_match()
     if M.highlighter.matches ~= nil and #M.highlighter.matches > 0 then
-        M.highlighter:move_cursor()
-        Finder_Logger:debug_print("Current index ", M.highlighter.match_index)
-        Finder_Logger:debug_print("Current matches ", M.highlighter.matches)
-        M.highlighter:clear_highlights(M.find_window.window_buffer)
-        M.highlighter:update_search_results(M.find_window.window_buffer, M.highlighter.match_index, M.highlighter.matches)
+        M.highlighter:move_cursor(-1)
+        M.reset_search()
     else
         Finder_Logger:debug_print("Matches is either undefined or empty ignoring enter")
     end
 end
 
+function M.next_match()
+    if M.highlighter.matches ~= nil and #M.highlighter.matches > 0 then
+        M.highlighter:move_cursor(1)
+        M.reset_search()
+    else
+        Finder_Logger:debug_print("Matches is either undefined or empty ignoring enter")
+    end
+end
+
+function M.reset_search()
+    M.highlighter:clear_highlights(M.find_window.window_buffer)
+    M.highlighter:update_search_results(M.find_window.window_buffer, M.highlighter.match_index, M.highlighter.matches)
+end
+
 function M.clear_search()
-    vim.api.nvim_buf_set_lines(M.find_window.window_buffer, 0, -1, false, {})
+    vim.api.nvim_buf_set_lines(M.find_window.window_buffer, constants.lines.START, constants.lines.END,
+                              true, constants.buffer.EMPTY_BUFFER)
 end
 
 function M.toggle()
@@ -70,6 +84,11 @@ function M.main()
     })
     vim.keymap.set('n', '<leader>f', M.toggle, {})
     vim.keymap.set('n', '<CR>', M.next_match, {
+        buffer = M.find_window.window_buffer,
+        nowait = true,
+        noremap = true,
+    })
+    vim.keymap.set('n', '<leader><CR>', M.previous_match, {
         buffer = M.find_window.window_buffer,
         nowait = true,
         noremap = true,

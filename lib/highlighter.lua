@@ -65,11 +65,18 @@ function finder_highlighter:highlight_pattern_in_line(line_number, word_start, w
     table.insert(self.matches, {line_number + 1, word_start})
 end
 
-function finder_highlighter:move_cursor()
-    self.match_index = ((self.match_index % #self.matches)) + 1
-    vim.api.nvim_win_set_cursor(self.hl_win, self.matches[self.match_index]) -- hmmmm
+function finder_highlighter:move_cursor(direction)
+    self.match_index = ((self.match_index + direction) % (#self.matches + 1))
+    if self.match_index < 1 then
+        if direction == -1 then
+            self.match_index = #self.matches
+        else
+            self.match_index = 1
+        end
+    end
+    vim.api.nvim_win_set_cursor(self.hl_win, self.matches[self.match_index])
     vim.api.nvim_win_call(self.hl_win, function()
-        vim.cmd("norm! zz")
+        vim.cmd(constants.cmds.CENTER_SCREEN)
     end)
 end
  -- returns ID of all highlights (could be expanded if needed)
