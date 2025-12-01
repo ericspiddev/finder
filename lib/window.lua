@@ -54,6 +54,15 @@ function finder_window:toggle()
     end
 end
 
+function finder_window:move_window(new_col)
+    if self:is_open() then
+        if new_col > 0 then
+            self.config.col = 0 -- why does this work...?
+            vim.api.nvim_win_set_config(self.win_id, self.config)
+        end
+    end
+end
+
 function finder_window:attach_events()
     if self.window_events ~= nil then
         vim.api.nvim_buf_attach(self.window_buffer, true, self.window_events)
@@ -73,9 +82,10 @@ end
 
 function finder_window:close()
     if self:is_open() then
-        Finder_Logger:debug_print("Closing open window")
-        vim.api.nvim_win_close(self.win_id, false)
+        close_id = self.win_id
         self.win_id = 0
+        Finder_Logger:debug_print("Closing open window")
+        vim.api.nvim_win_close(close_id, false)
     else
         Finder_Logger:debug_print("Attempted to close a but now window was open ignoring...")
     end

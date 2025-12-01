@@ -23,7 +23,7 @@ function M.setup(config)
 
     Finder_Logger:debug_print("window: making a new window with config ", win_config)
     local win_buf = vim.api.nvim_create_buf(true, false) -- buflisted, scratch buffer
-    local hl_buf = vim.api.nvim_win_get_buf(0) -- buflisted, scratch buffer
+    local hl_buf = vim.api.nvim_win_get_buf(0) -- get current window's buffer
     local hl_win = vim.api.nvim_get_current_win()
     local hl_namespace = vim.api.nvim_create_namespace("finder")
     M.highlighter = highlighter:new(hl_buf, hl_win, hl_namespace, "Search")
@@ -71,18 +71,20 @@ function M.toggle()
 end
 
 function M.main()
-    vim.api.nvim_create_autocmd({ "WinEnter", "WinLeave" }, {
+    vim.api.nvim_create_autocmd({ "WinEnter" }, {
         callback = function(ev)
-            local win = vim.api.nvim_get_current_win()
-            vim.print("Window event: " .. ev.event .. " | win=" .. vim.api.nvim_get_current_win())
-            vim.print("Window id for find is " .. M.find_window.win_id)
-            if M.find_window.win_id ~= win and ev.event == "WinEnter" then
-                M.find_window.highlighter:update_context(win)
-                M.highlighter:clear_highlights(M.find_window.window_buffer)
+            local win = vim.api.nvim_get_current_win() -- this gets the current window....
+            if M.find_window.win_id ~= 0 and M.find_window.win_id ~= win then
+                --M.find_window.highlighter:update_context(win)
+                --M.highlighter:clear_highlights(M.find_window.window_buffer)
+                local finder_col = vim.api.nvim_win_get_position(M.find_window.win_id)[2] -- get find window column and where it is
+                local new_win_col = vim.api.nvim_win_get_position(win)[2] -- if find window id is not win and the event is WinEnter...
+                M.find_window:move_window(new_win_col)
             end
       end,
     })
     vim.keymap.set('n', '<leader>f', M.toggle, {})
+
     vim.keymap.set('n', '<CR>', M.next_match, {
         buffer = M.find_window.window_buffer,
         nowait = true,
