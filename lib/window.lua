@@ -1,4 +1,5 @@
 
+local constants = require("plugins.custom.finder.lib.consts")
 finder_window = {}
 finder_window.__index = finder_window
 
@@ -12,7 +13,7 @@ function finder_window:new(window_buffer, window_config, width_percent, should_e
         should_enter = should_enter or true,
         send_buffer = false, -- unused since we use lua cbs
         highlighter = highlighter,
-        win_id = 0
+        win_id = constants.window.INVALID_WINDOW_ID
     }
     return setmetatable(obj, self)
 end
@@ -40,7 +41,7 @@ function finder_window:on_lines_handler(...)
 end
 
 function finder_window:is_open()
-    return self.win_id ~= 0
+    return self.win_id ~= constants.window.INVALID_WINDOW_ID
 end
 
 function finder_window:get_window_contents(first, last)
@@ -78,6 +79,10 @@ function finder_window:open()
         self.config.col = vim.api.nvim_win_get_width(window)
         self.search_window = window
         self.win_id = vim.api.nvim_open_win(self.window_buffer, self.should_enter, self.config ) -- enter window upon opening it
+        if self.highlighter.hl_context == constants.buffer.NO_CONTEXT then
+            Finder_Logger:warning_print("No valid context found attempting to populate now")
+            self.highlighter:update_context(window)
+        end
         --Finder_Logger:debug_print("Win id is ", self.win_id)
         self:attach_events() -- pass through like {on_lines: lines_handler}
     else
@@ -88,7 +93,7 @@ end
 function finder_window:close()
     if self:is_open() then
         close_id = self.win_id
-        self.win_id = 0
+        self.win_id = constants.window.INVALID_WINDOW_ID
         Finder_Logger:debug_print("Closing open window")
         vim.api.nvim_win_close(close_id, false)
     else

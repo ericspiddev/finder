@@ -1,11 +1,12 @@
 finder_highlighter = {}
 finder_highlighter.__index = finder_highlighter
+local constants = require("plugins.custom.finder.lib.consts")
 
 function finder_highlighter:new(hl_buf, hl_win, hl_namespace, hl_style)
     local obj = {
         hl_buf = hl_buf,
         hl_win = hl_win,
-        hl_context = 0,
+        hl_context = constants.buffer.NO_CONTEXT,
         hl_namespace = hl_namespace,
         hl_style = hl_style,
         hl_fns = self:get_hl_fns(),
@@ -31,12 +32,23 @@ end
 function finder_highlighter:populate_hl_context(buf_id)
     self.hl_buf = buf_id
     local total_lines = vim.api.nvim_buf_line_count(buf_id)
-    self.hl_context = vim.api.nvim_buf_get_lines(0, 0, total_lines, false)
+    if total_lines > 0 then
+        Finder_Logger:warning_print("Populating context with " .. total_lines .. " total lines")
+        self.hl_context = vim.api.nvim_buf_get_lines(buf_id, constants.lines.START, total_lines, false)
+        Finder_Logger:debug_print("HL context set too " .. vim.inspect(self.hl_context))
+    else
+        Finder_Logger:warning_print("No valid lines found to populate highlight context")
+        self.hl_context = constants.buffer.NO_CONTEXT
+    end
 end
 
 function finder_highlighter:highlight_file_by_pattern(win_buf, pattern)
     if pattern == nil then
         Finder_Logger:warning_print("Nil pattern cancelling search")
+        return
+    end
+    if self.hl_context == constants.buffer.NO_CONTEXT then
+        Finder_Logger:warning_print("No context to search through")
         return
     end
     for line_number, line in ipairs(self.hl_context) do
