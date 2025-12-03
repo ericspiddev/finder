@@ -59,7 +59,7 @@ end
 function finder_window:move_window(new_col)
     if self:is_open() then
         if new_col > 0 then
-            self.config.col = 0 -- why does this work...?
+            self.config.col = new_col
             vim.api.nvim_win_set_config(self.win_id, self.config)
         end
     end
@@ -83,7 +83,6 @@ function finder_window:open()
             Finder_Logger:warning_print("No valid context found attempting to populate now")
             self.highlighter:update_context(window)
         end
-        --Finder_Logger:debug_print("Win id is ", self.win_id)
         self:attach_events() -- pass through like {on_lines: lines_handler}
     else
         Finder_Logger:debug_print("Attempted to open an already open window ignoring...")

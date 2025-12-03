@@ -5,6 +5,9 @@
      },
      events = {
         WINDOW_ENTER_EVENT = "WinEnter",
+        WINDOW_LEAVE_EVENT = "WinLeave",
+        WINDOW_RESIZED = "WinResized",
+        BUFFER_ENTER = "BufEnter"
      },
      position = {
         ROW_INDEX = 1,

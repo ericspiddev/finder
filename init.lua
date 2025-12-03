@@ -71,21 +71,45 @@ function M.toggle()
     M.find_window:toggle()
 end
 
+function M.refocus_search()
+    if M.find_window:is_open() and vim.api.nvim_win_is_valid(M.find_window.win_id) then
+        vim.api.nvim_set_current_win(M.find_window.win_id)
+    end
+end
+
+function M.resize_finder_window(ev)
+    if vim.api.nvim_win_is_valid(M.highlighter.hl_win) then
+        local width = vim.api.nvim_win_get_width(M.highlighter.hl_win)
+        vim.api.nvim_win_call(M.highlighter.hl_win, function()
+            M.find_window:move_window(width)
+        end)
+    end
+end
+
+function M.update_finder_context(ev)
+    local enterBuf = ev.buf
+    if vim.api.nvim_buf_is_valid(enterBuf) and enterBuf ~= M.find_window.window_buffer then
+        M.highlighter:clear_highlights(M.find_window.window_buffer)
+        M.highlighter:populate_hl_context(ev.buf)
+    end
+end
+
 function M.main()
-    vim.api.nvim_create_autocmd({ constants.events.WINDOW_ENTER_EVENT }, {
+    vim.api.nvim_create_autocmd({constants.events.WINDOW_RESIZED}, {
+        callback = M.resize_finder_window
+    })
+    vim.api.nvim_create_autocmd({constants.events.WINDOW_LEAVE_EVENT}, {
         callback = function(ev)
-            local win = vim.api.nvim_get_current_win() -- this gets the current window....
-            if M.find_window.win_id ~= constants.window.INVALID_WINDOW_ID and M.find_window.win_id ~= win then
-                M.find_window.highlighter:update_context(win)
-                M.highlighter:clear_highlights(M.find_window.window_buffer)
-                local finder_col = vim.api.nvim_win_get_position(M.find_window.win_id)[constants.position.COL_INDEX] -- get find window column and where it is
-                local new_win_col = vim.api.nvim_win_get_position(win)[constants.position.COL_INDEX] -- if find window id is not win and the event is WinEnter...
-                M.find_window:move_window(new_win_col)
+            if ev.buf == M.find_window.window_buffer then
+                M.highlighter:clear_highlights(M.highlighter.hl_buf)
             end
-      end,
+        end
+    })
+    vim.api.nvim_create_autocmd({constants.events.BUFFER_ENTER}, {
+        callback = M.update_finder_context
     })
     vim.keymap.set('n', '<leader>f', M.toggle, {})
-
+    vim.keymap.set('n', 'f', M.refocus_search, {})
     vim.keymap.set('n', '<CR>', M.next_match, {
         buffer = M.find_window.window_buffer,
         nowait = true,

@@ -26,14 +26,19 @@ function finder_highlighter:get_hl_fns()
 end
 
 function finder_highlighter:update_context(window)
+    vim.print("UPDATE CONTEXT with window id " .. window)
     self:populate_hl_context(vim.api.nvim_win_get_buf(window))
 end
 
 function finder_highlighter:populate_hl_context(buf_id)
+    if not vim.api.nvim_buf_is_valid(buf_id) then
+        Finder_Logger.warning_print("Attempting to populate context with invalid buffer id")
+        return
+    end
     self.hl_buf = buf_id
     local total_lines = vim.api.nvim_buf_line_count(buf_id)
     if total_lines > 0 then
-        Finder_Logger:warning_print("Populating context with " .. total_lines .. " total lines")
+        Finder_Logger:debug_print("Populating context with " .. total_lines .. " total lines")
         self.hl_context = vim.api.nvim_buf_get_lines(buf_id, constants.lines.START, total_lines, false)
         Finder_Logger:debug_print("HL context set too " .. vim.inspect(self.hl_context))
     else
@@ -54,7 +59,7 @@ function finder_highlighter:highlight_file_by_pattern(win_buf, pattern)
     for line_number, line in ipairs(self.hl_context) do
         local pattern_start, pattern_end = string.find(line, pattern)
         if pattern_start then
-            self:highlight_pattern_in_line(line_number -1, pattern_start -1, pattern_end) -- highlight with start index and end index
+            self:highlight_pattern_in_line(line_number - 1, pattern_start - 1, pattern_end) -- highlight with start index and end index
         end
     end
     if #self.matches > 0 then
@@ -65,16 +70,17 @@ end
 function finder_highlighter:update_search_results(buffer, curr, list)
     if curr ~= nil and curr > -1 and list ~= nil and #list > 0 then
         self.hl_fns.highlight(buffer, self.hl_namespace, 0, -1, {
-            virt_text = { {curr .. "/" .. #list, "Comment"}},
-            virt_text_pos = "right_align",
+            --virt_text = { { curr .. "/" .. #list, "Comment" } },
+            --virt_text_pos = "right_align",
         })
     end
 end
 
 -- If I were calling this function how would I like to call it...?
 function finder_highlighter:highlight_pattern_in_line(line_number, word_start, word_end)
-    self.hl_fns.highlight(self.hl_buf, self.hl_namespace, line_number, word_start, {end_col=word_end, hl_group=self.hl_style})
-    table.insert(self.matches, {line_number + 1, word_start})
+    self.hl_fns.highlight(self.hl_buf, self.hl_namespace, line_number, word_start,
+        { end_col = word_end, hl_group = self.hl_style })
+    table.insert(self.matches, { line_number + 1, word_start })
 end
 
 function finder_highlighter:move_cursor(direction)
@@ -91,7 +97,8 @@ function finder_highlighter:move_cursor(direction)
         vim.cmd(constants.cmds.CENTER_SCREEN)
     end)
 end
- -- returns ID of all highlights (could be expanded if needed)
+
+-- returns ID of all highlights (could be expanded if needed)
 function finder_highlighter:get_buffer_current_hls(buffer)
     local ids = {}
     ID_INDEX = 1
@@ -103,7 +110,7 @@ end
 
 function finder_highlighter:clear_highlights(buffer)
     for _, highlight in ipairs(self:get_buffer_current_hls(buffer)) do
-        self.hl_fns.remove_highlight(buffer, self.hl_namespace, highlight)
+        self.hl_fns.remove_highlight(self.hl_buf, self.hl_namespace, highlight)
     end
 end
 
