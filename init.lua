@@ -41,8 +41,8 @@ end
 
 function M.previous_match()
     if M.highlighter.matches ~= nil and #M.highlighter.matches > 0 then
-        M.highlighter:move_cursor(constants.search.BACKWARD)
         M.reset_search()
+        M.highlighter:move_cursor(constants.search.BACKWARD)
     else
         Finder_Logger:debug_print("Matches is either undefined or empty ignoring enter")
     end
@@ -50,15 +50,15 @@ end
 
 function M.next_match()
     if M.highlighter.matches ~= nil and #M.highlighter.matches > 0 then
-        M.highlighter:move_cursor(constants.search.FORWARD)
         M.reset_search()
+        M.highlighter:move_cursor(constants.search.FORWARD)
     else
         Finder_Logger:debug_print("Matches is either undefined or empty ignoring enter")
     end
 end
 
 function M.reset_search()
-    M.highlighter:clear_highlights(M.find_window.window_buffer)
+    M.highlighter:clear_match_count(M.find_window.window_buffer)
     M.highlighter:update_search_results(M.find_window.window_buffer, M.highlighter.match_index, M.highlighter.matches)
 end
 
@@ -89,8 +89,7 @@ end
 function M.update_finder_context(ev)
     local enterBuf = ev.buf
     if vim.api.nvim_buf_is_valid(enterBuf) and enterBuf ~= M.find_window.window_buffer then
-        M.highlighter:clear_highlights(M.find_window.window_buffer)
-        M.highlighter:populate_hl_context(ev.buf)
+        M.highlighter:update_hl_context(ev.buf, M.find_window.window_buffer)
     end
 end
 

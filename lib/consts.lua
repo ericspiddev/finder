@@ -18,6 +18,9 @@
         NO_CONTEXT = -1,
         EMPTY_BUFFER = {},
      },
+     highlight = {
+         NO_WORD_COUNT_EXTMARK = -1
+     },
      search = {
         FORWARD = 1,
         BACKWARD = -1,

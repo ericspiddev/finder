@@ -29,9 +29,7 @@ function finder_window:on_lines_handler(...)
 
     local search = self:get_window_contents(first_line, new_lastline) --grab the current contents of the window
     vim.schedule(function()
-        Finder_Logger:debug_print("Clearing highlighting")
-        self.highlighter:clear_highlights(self.highlighter.hl_buf)
-        self.highlighter:clear_highlights(self.window_buffer)
+        self.highlighter:clear_highlights(self.highlighter.hl_buf, self.window_buffer)
         self.highlighter.match_index = 0
         self.highlighter.matches = {}
         Finder_Logger:debug_print("Searching buffer for pattern ", search)
@@ -81,7 +79,7 @@ function finder_window:open()
         self.win_id = vim.api.nvim_open_win(self.window_buffer, self.should_enter, self.config ) -- enter window upon opening it
         if self.highlighter.hl_context == constants.buffer.NO_CONTEXT then
             Finder_Logger:warning_print("No valid context found attempting to populate now")
-            self.highlighter:update_context(window)
+            self.highlighter:update_hl_context(window, self.win_id)
         end
         self:attach_events() -- pass through like {on_lines: lines_handler}
     else

@@ -10,6 +10,7 @@ function finder_highlighter:new(hl_buf, hl_win, hl_namespace, hl_style)
         hl_namespace = hl_namespace,
         hl_style = hl_style,
         hl_fns = self:get_hl_fns(),
+        hl_wc_ext_id = constants.highlight.NO_WORD_COUNT_EXTMARK,
         matches = {},
         match_index = 0
     }
@@ -25,9 +26,9 @@ function finder_highlighter:get_hl_fns()
     return fns
 end
 
-function finder_highlighter:update_context(window)
-    vim.print("UPDATE CONTEXT with window id " .. window)
-    self:populate_hl_context(vim.api.nvim_win_get_buf(window))
+function finder_highlighter:update_hl_context(hl_buf, finder_buf)
+    self:clear_match_count(finder_buf)
+    self:populate_hl_context(hl_buf)
 end
 
 function finder_highlighter:populate_hl_context(buf_id)
@@ -48,6 +49,7 @@ function finder_highlighter:populate_hl_context(buf_id)
 end
 
 function finder_highlighter:highlight_file_by_pattern(win_buf, pattern)
+
     if pattern == nil then
         Finder_Logger:warning_print("Nil pattern cancelling search")
         return
@@ -57,21 +59,35 @@ function finder_highlighter:highlight_file_by_pattern(win_buf, pattern)
         return
     end
     for line_number, line in ipairs(self.hl_context) do
+        local search_index = 1
         local pattern_start, pattern_end = string.find(line, pattern)
-        if pattern_start then
+        while pattern_start ~= nil and pattern ~= ""do
             self:highlight_pattern_in_line(line_number - 1, pattern_start - 1, pattern_end) -- highlight with start index and end index
+            search_index = pattern_end + 1
+            pattern_start, pattern_end = string.find(line, pattern, search_index)
         end
     end
-    if #self.matches > 0 then
+
+    if #self.matches > 0 and pattern ~= "" then
+        vim.print("matches > 0... index is " .. self.match_index .. " and matches holds " .. #self.matches)
         self:update_search_results(win_buf, self.match_index, self.matches)
     end
 end
 
-function finder_highlighter:update_search_results(buffer, curr, list)
-    if curr ~= nil and curr > -1 and list ~= nil and #list > 0 then
-        self.hl_fns.highlight(buffer, self.hl_namespace, 0, -1, {
-            --virt_text = { { curr .. "/" .. #list, "Comment" } },
-            --virt_text_pos = "right_align",
+function finder_highlighter:clear_match_count(buffer)
+    if self.hl_wc_ext_id ~= constants.highlight.NO_WORD_COUNT_EXTMARK
+        and buffer ~= nil
+        and vim.api.nvim_buf_is_valid(buffer) then
+        self.hl_fns.remove_highlight(buffer, self.hl_namespace, self.hl_wc_ext_id)
+        self.hl_wc_ext_id = constants.highlight.NO_WORD_COUNT_EXTMARK
+    end
+end
+
+function finder_highlighter:update_search_results(buffer, match_index, list)
+    if match_index ~= nil and match_index > -1 and list ~= nil and #list > 0 then
+       self.hl_wc_ext_id = self.hl_fns.highlight(buffer, self.hl_namespace, 0, -1, {
+            virt_text = { { match_index .. "/" .. #list, "Comment" } },
+            virt_text_pos = "right_align",
         })
     end
 end
@@ -102,14 +118,19 @@ end
 function finder_highlighter:get_buffer_current_hls(buffer)
     local ids = {}
     ID_INDEX = 1
+    if buffer == nil or not vim.api.nvim_buf_is_valid(buffer) then
+        Finder_Logger:warning_print("Invalid buffer to serach", buffer)
+        return
+    end
     for _, highlight in ipairs(self.hl_fns.get_all_highlights(buffer, self.hl_namespace, 0, -1, {})) do
         table.insert(ids, highlight[ID_INDEX])
     end
     return ids
 end
 
-function finder_highlighter:clear_highlights(buffer)
-    for _, highlight in ipairs(self:get_buffer_current_hls(buffer)) do
+function finder_highlighter:clear_highlights(hl_buf, win_buf)
+    self:clear_match_count(win_buf)
+    for _, highlight in ipairs(self:get_buffer_current_hls(hl_buf)) do
         self.hl_fns.remove_highlight(self.hl_buf, self.hl_namespace, highlight)
     end
 end
