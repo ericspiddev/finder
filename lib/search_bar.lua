@@ -37,6 +37,8 @@ function finder_search_bar:on_lines_handler(...)
     local search = self:get_window_contents(first_line, new_lastline) --grab the current contents of the window
     vim.schedule(function()
         self.highlighter:clear_highlights(self.highlighter.hl_buf, self.query_buffer)
+        -- anytime we search update in case the file changed... this needs to be optimized for better performance
+        self.highlighter:update_hl_context(self.highlighter.hl_buf, self.query_buffer)
         self.highlighter.match_index = 0
         self.highlighter.matches = {}
         Finder_Logger:debug_print("Searching buffer for pattern ", search)
