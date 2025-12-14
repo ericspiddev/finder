@@ -76,15 +76,17 @@ function finder_search_bar:open()
     if not self:is_open() then
         Finder_Logger:debug_print("Opening window")
         local window = vim.api.nvim_get_current_win()
+        self.query_buffer = vim.api.nvim_create_buf(constants.buffer.LIST_BUFFER, constants.buffer.SCRATCH_BUFFER)
         self.query_win_config.width = math.floor(vim.api.nvim_win_get_width(window) * self.width_percent)
         self.query_win_config.col = vim.api.nvim_win_get_width(window)
         self.search_window = window
-        self.win_id = vim.api.nvim_open_win(self.query_buffer, self.should_enter, self.query_win_config ) -- enter window upon opening it
+        self.win_id = vim.api.nvim_open_win(self.query_buffer, self.should_enter, self.query_win_config)
         if self.highlighter.hl_context == constants.buffer.NO_CONTEXT then
             Finder_Logger:warning_print("No valid context found attempting to populate now")
             self.highlighter:update_hl_context(window, self.win_id)
         end
         self:attach_events() -- pass through like {on_lines: lines_handler}
+        vim.cmd('startinsert') -- allow for typing right away
     else
         Finder_Logger:debug_print("Attempted to open an already open window ignoring...")
     end
@@ -96,6 +98,8 @@ function finder_search_bar:close()
         self.win_id = constants.window.INVALID_WINDOW_ID
         Finder_Logger:debug_print("Closing open window")
         vim.api.nvim_win_close(close_id, false)
+        vim.api.nvim_buf_delete(self.query_buffer, {force = true}) -- buffer must be deleted after window otherwise window_close gives bad id
+        self.query_buffer = constants.window.INVALID_WINDOW_ID
     else
         Finder_Logger:debug_print("Attempted to close a but now window was open ignoring...")
     end

@@ -15,8 +15,11 @@
      },
      buffer = {
         CURRENT_BUFFER = 0,
+        INVALID_BUFFER = -1,
         NO_CONTEXT = -1,
         EMPTY_BUFFER = {},
+        SCRATCH_BUFFER = true,
+        LIST_BUFFER = true,
      },
      highlight = {
          NO_WORD_COUNT_EXTMARK = -1,
