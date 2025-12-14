@@ -29,34 +29,6 @@ function M.setup(config)
     M.main()
 end
 
-function M.previous_match()
-    if M.search_bar.highlighter.matches ~= nil and #M.search_bar.highlighter.matches > 0 then
-        M.reset_search()
-        M.search_bar.highlighter:move_cursor(constants.search.BACKWARD)
-    else
-        Finder_Logger:debug_print("Matches is either undefined or empty ignoring enter")
-    end
-end
-
-function M.next_match()
-    if M.search_bar.highlighter.matches ~= nil and #M.search_bar.highlighter.matches > 0 then
-        M.reset_search()
-        M.search_bar.highlighter:move_cursor(constants.search.FORWARD)
-    else
-        Finder_Logger:debug_print("Matches is either undefined or empty ignoring enter")
-    end
-end
-
-function M.reset_search()
-    M.search_bar.highlighter:clear_match_count(M.search_bar.query_buffer)
-    M.search_bar.highlighter:update_search_results(M.search_bar.query_buffer, M.search_bar.highlighter.match_index, M.search_bar.highlighter.matches)
-end
-
-function M.finder_clear_search()
-    vim.api.nvim_buf_set_lines(M.search_bar.query_buffer, constants.lines.START, constants.lines.END,
-                              true, constants.buffer.EMPTY_BUFFER)
-end
-
 function M.toggle()
     M.search_bar:toggle()
 end
@@ -97,22 +69,8 @@ function M.main()
     vim.api.nvim_create_autocmd({constants.events.BUFFER_ENTER}, {
         callback = M.update_finder_context
     })
+
     vim.keymap.set('n', '/', M.toggle, {}) -- likely change for obvious reasons later
     vim.keymap.set('n', 'f', M.refocus_search, {})
-    vim.keymap.set('n', '<CR>', M.next_match, {
-        buffer = M.search_bar.query_buffer,
-        nowait = true,
-        noremap = true,
-    })
-    vim.keymap.set('n', '<leader><CR>', M.previous_match, {
-        buffer = M.search_bar.query_buffer,
-        nowait = true,
-        noremap = true,
-    })
-    vim.keymap.set('n', 'c', M.finder_clear_search, {
-        buffer = M.search_bar.query_buffer,
-        nowait = true,
-        noremap = true,
-    })
 end
 return M

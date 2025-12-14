@@ -1,6 +1,8 @@
 
 local constants = require("plugins.custom.finder.lib.consts")
 local highlighter = require("plugins.custom.finder.lib.highlighter")
+local keymaps = require("plugins.custom.finder.lib.keymaps")
+keymap_mgr = nil
 finder_search_bar = {}
 finder_search_bar.__index = finder_search_bar
 
@@ -18,7 +20,9 @@ function finder_search_bar:new(window_config, width_percent, should_enter)
         highlighter = highlighter:new(current_editing_win, constants.highlight.MATCH_HIGHLIGHT),
         win_id = constants.window.INVALID_WINDOW_ID
     }
-    return setmetatable(obj, self)
+    t = setmetatable(obj, self)
+    keymap_mgr = keymaps:new(t)
+    return t
 end
 
 function finder_search_bar:set_event_handlers(events)
@@ -87,6 +91,7 @@ function finder_search_bar:open()
         end
         self:attach_events() -- pass through like {on_lines: lines_handler}
         vim.cmd('startinsert') -- allow for typing right away
+        keymap_mgr:setup_search_keymaps()
     else
         Finder_Logger:debug_print("Attempted to open an already open window ignoring...")
     end
@@ -97,12 +102,39 @@ function finder_search_bar:close()
         close_id = self.win_id
         self.win_id = constants.window.INVALID_WINDOW_ID
         Finder_Logger:debug_print("Closing open window")
+
+        keymap_mgr:teardown_search_keymaps()
         vim.api.nvim_win_close(close_id, false)
         vim.api.nvim_buf_delete(self.query_buffer, {force = true}) -- buffer must be deleted after window otherwise window_close gives bad id
         self.query_buffer = constants.window.INVALID_WINDOW_ID
     else
         Finder_Logger:debug_print("Attempted to close a but now window was open ignoring...")
     end
+end
+
+function finder_search_bar:previous_match()
+    self:move_selected_match(constants.search.BACKWARD)
+end
+
+function finder_search_bar:next_match()
+    self:move_selected_match(constants.search.FORWARD)
+end
+
+function finder_search_bar:move_selected_match(direction)
+    if self.highlighter.matches ~= nil and #self.highlighter.matches > 0 then
+        self.highlighter:clear_match_count(self.query_buffer)
+        self.highlighter:update_search_results(self.query_buffer,
+                                               self.highlighter.match_index,
+                                               self.highlighter.matches)
+        self.highlighter:move_cursor(direction)
+    else
+        Finder_Logger:debug_print("Matches is either undefined or empty ignoring enter")
+    end
+end
+
+function finder_search_bar:clear_search()
+    vim.api.nvim_buf_set_lines(self.query_buffer, constants.lines.START, constants.lines.END,
+                              true, constants.buffer.EMPTY_BUFFER)
 end
 
 return finder_search_bar
