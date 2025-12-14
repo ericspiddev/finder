@@ -17,8 +17,8 @@ function finder_search_bar:new(window_config, width_percent, should_enter)
         width_percent = width_percent,
         should_enter = should_enter or true,
         send_buffer = false, -- unused since we use lua cbs
-        highlighter = highlighter:new(current_editing_win, constants.highlight.MATCH_HIGHLIGHT),
-        win_id = constants.window.INVALID_WINDOW_ID
+        highlighter = highlighter:new(current_editing_win, constants.highlight.MATCH_HIGHLIGHT, constants.highlight.CURR_MATCH_HIGHLIGHT),
+        win_id = constants.window.INVALID_WINDOW_ID,
     }
     t = setmetatable(obj, self)
     keymap_mgr = keymaps:new(t)

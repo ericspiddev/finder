@@ -3,17 +3,17 @@ finder_highlighter.__index = finder_highlighter
 local constants = require("plugins.custom.finder.lib.consts")
 local match_obj = require("plugins.custom.finder.lib.match")
 
-function finder_highlighter:new(editor_window, hl_style)
+function finder_highlighter:new(editor_window, hl_style, curr_match_hl_style)
     local obj = {
         hl_buf = vim.api.nvim_win_get_buf(editor_window),
         hl_win = editor_window,
         hl_context = constants.buffer.NO_CONTEXT,
         hl_namespace = vim.api.nvim_create_namespace(constants.highlight.FINDER_NAMESPACE),
         hl_style = hl_style,
+        curr_hl_style = curr_match_hl_style,
         hl_fns = self:get_hl_fns(),
         hl_wc_ext_id = constants.highlight.NO_WORD_COUNT_EXTMARK,
         matches = {},
-        selected_match_mark = -1,
         match_index = 0
     }
     return setmetatable(obj, self)
@@ -63,7 +63,7 @@ function finder_highlighter:highlight_file_by_pattern(win_buf, pattern)
     for line_number, line in ipairs(self.hl_context) do
         local search_index = 1
         local pattern_start, pattern_end = string.find(line, pattern)
-        while pattern_start ~= nil and pattern ~= ""do
+        while pattern_start ~= nil and pattern ~= "" do
             self:highlight_pattern_in_line(line_number - 1, pattern_start - 1, pattern_end) -- highlight with start index and end index
             search_index = pattern_end + 1
             pattern_start, pattern_end = string.find(line, pattern, search_index)
@@ -86,7 +86,7 @@ function finder_highlighter:clear_match_count(buffer)
 end
 
 function finder_highlighter:update_search_results(buffer, match_index, list)
-    if match_index ~= nil and match_index > -1 and list ~= nil and #list > 0 then
+    if match_index ~= nil and match_index > -1 and list ~= nil and #list > 0 and buffer ~= constants.buffer.INVALID_BUFFER then
        self.hl_wc_ext_id = self.hl_fns.highlight(buffer, self.hl_namespace, 0, -1, {
             virt_text = { { match_index .. "/" .. #list, "Comment" } },
             virt_text_pos = "right_align",
@@ -95,13 +95,13 @@ function finder_highlighter:update_search_results(buffer, match_index, list)
 end
 
 function finder_highlighter:highlight_pattern_in_line(line_number, word_start, word_end)
-    self.hl_fns.highlight(self.hl_buf, self.hl_namespace, line_number, word_start,
+    local extmark_id = self.hl_fns.highlight(self.hl_buf, self.hl_namespace, line_number, word_start,
         { end_col = word_end, hl_group = self.hl_style })
-    table.insert(self.matches, match_obj:new(line_number + 1, word_start, word_end))
+    table.insert(self.matches, match_obj:new(line_number + 1, word_start, word_end, extmark_id))
 end
 
 function finder_highlighter:move_cursor(direction)
-    self:remove_selected_match_hl()
+    self:set_match_highlighting(self.matches[self.match_index], self.hl_style)
     self.match_index = ((self.match_index + direction) % (#self.matches + 1))
     if self.match_index < 1 then
         if direction == -1 then
@@ -111,17 +111,17 @@ function finder_highlighter:move_cursor(direction)
         end
     end
     local match = self.matches[self.match_index]
+    self.hl_fns.remove_highlight(self.hl_buf, self.hl_namespace, match.extmark_id)
     vim.api.nvim_win_set_cursor(self.hl_win, {match.row, match.m_start})
-    self.selected_match_mark = self.hl_fns.highlight(self.hl_buf, self.hl_namespace, match.row - 1, match.m_start, -- 0 indexed for some reason
-        { end_col = match.m_end, hl_group = constants.highlight.CURR_MATCH_HIGHLIGHT })
-    vim.api.nvim_win_call(self.hl_win, function()
-        vim.cmd(constants.cmds.CENTER_SCREEN)
-    end)
+    self:set_match_highlighting(match, self.curr_hl_style)
+    vim.cmd(constants.cmds.CENTER_SCREEN) -- center the screen on our cursor?
 end
 
-function finder_highlighter:remove_selected_match_hl()
-    if self.selected_match_mark ~= -1 then
-        self.hl_fns.remove_highlight(self.hl_buf, self.hl_namespace, self.selected_match_mark)
+function finder_highlighter:set_match_highlighting(match, hl)
+    if match ~= nil then
+        local ext_id = self.hl_fns.highlight(self.hl_buf, self.hl_namespace, match.row -1, match.m_start,
+        { id = match.extmark_id, end_col = match.m_end, hl_group = hl })
+        match:update_extmark_id(ext_id)
     end
 end
 
