@@ -19,7 +19,9 @@
         EMPTY_BUFFER = {},
      },
      highlight = {
-         NO_WORD_COUNT_EXTMARK = -1
+         NO_WORD_COUNT_EXTMARK = -1,
+         FINDER_NAMESPACE = "finder",
+         MATCH_HIGHLIGHT = "Search",
      },
      search = {
         FORWARD = 1,

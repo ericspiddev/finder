@@ -1,6 +1,5 @@
 local events = require("plugins.custom.finder.lib.events")
 local search_bar = require("plugins.custom.finder.lib.search_bar")
-local highlighter = require("plugins.custom.finder.lib.highlighter")
 local constants = require("plugins.custom.finder.lib.consts")
 local M = {}
 
@@ -10,10 +9,7 @@ function M.setup(config)
     local search_bar_config = {
         relative='win',
         row=0,
-        col=200, -- TODO: come back to me
-        width=50,
         zindex=1,
-        anchor='NE',
         focusable=true,
         height=1,
         style="minimal",
@@ -23,13 +19,8 @@ function M.setup(config)
     }
 
     Finder_Logger:debug_print("window: making a new window with config ", search_bar_config)
-    local search_bar_buffer = vim.api.nvim_create_buf(true, false) -- buflisted, scratch buffer
-    local file_buffer = vim.api.nvim_win_get_buf(constants.window.CURRENT_WINDOW) -- get current window's buffer
-    local file_window = vim.api.nvim_get_current_win()
-    local hl_namespace = vim.api.nvim_create_namespace("finder")
 
-    M.highlighter = highlighter:new(file_buffer, file_window, hl_namespace, "Search")
-    M.search_bar = search_bar:new(search_bar_buffer, search_bar_config, config.width_percentage, true, M.highlighter)
+    M.search_bar = search_bar:new(search_bar_config, config.width_percentage, true)
     M.search_bar.highlighter:populate_hl_context(constants.window.CURRENT_WINDOW)
     M.window_events = events:new(search_bar.VALID_WINDOW_EVENTS)
     M.window_events:add_event("on_lines", M.search_bar, "on_lines_handler")
@@ -38,28 +29,27 @@ function M.setup(config)
     M.main()
 end
 
-
 function M.previous_match()
-    if M.highlighter.matches ~= nil and #M.highlighter.matches > 0 then
+    if M.search_bar.highlighter.matches ~= nil and #M.search_bar.highlighter.matches > 0 then
         M.reset_search()
-        M.highlighter:move_cursor(constants.search.BACKWARD)
+        M.search_bar.highlighter:move_cursor(constants.search.BACKWARD)
     else
         Finder_Logger:debug_print("Matches is either undefined or empty ignoring enter")
     end
 end
 
 function M.next_match()
-    if M.highlighter.matches ~= nil and #M.highlighter.matches > 0 then
+    if M.search_bar.highlighter.matches ~= nil and #M.search_bar.highlighter.matches > 0 then
         M.reset_search()
-        M.highlighter:move_cursor(constants.search.FORWARD)
+        M.search_bar.highlighter:move_cursor(constants.search.FORWARD)
     else
         Finder_Logger:debug_print("Matches is either undefined or empty ignoring enter")
     end
 end
 
 function M.reset_search()
-    M.highlighter:clear_match_count(M.search_bar.query_buffer)
-    M.highlighter:update_search_results(M.search_bar.query_buffer, M.highlighter.match_index, M.highlighter.matches)
+    M.search_bar.highlighter:clear_match_count(M.search_bar.query_buffer)
+    M.search_bar.highlighter:update_search_results(M.search_bar.query_buffer, M.search_bar.highlighter.match_index, M.search_bar.highlighter.matches)
 end
 
 function M.finder_clear_search()
@@ -78,9 +68,9 @@ function M.refocus_search()
 end
 
 function M.resize_finder_window(ev)
-    if vim.api.nvim_win_is_valid(M.highlighter.hl_win) then
-        local width = vim.api.nvim_win_get_width(M.highlighter.hl_win)
-        vim.api.nvim_win_call(M.highlighter.hl_win, function()
+    if vim.api.nvim_win_is_valid(M.search_bar.highlighter.hl_win) then
+        local width = vim.api.nvim_win_get_width(M.search_bar.highlighter.hl_win)
+        vim.api.nvim_win_call(M.search_bar.highlighter.hl_win, function()
             M.search_bar:move_window(width)
         end)
     end
@@ -89,7 +79,7 @@ end
 function M.update_finder_context(ev)
     local enterBuf = ev.buf
     if vim.api.nvim_buf_is_valid(enterBuf) and enterBuf ~= M.search_bar.query_buffer then
-        M.highlighter:update_hl_context(ev.buf, M.search_bar.query_buffer)
+        M.search_bar.highlighter:update_hl_context(ev.buf, M.search_bar.query_buffer)
     end
 end
 
@@ -100,7 +90,7 @@ function M.main()
     vim.api.nvim_create_autocmd({constants.events.WINDOW_LEAVE_EVENT}, {
         callback = function(ev)
             if ev.buf == M.search_bar.query_buffer then
-                M.highlighter:clear_highlights(M.highlighter.hl_buf)
+                M.search_bar.highlighter:clear_highlights(M.search_bar.highlighter.hl_buf)
             end
         end
     })

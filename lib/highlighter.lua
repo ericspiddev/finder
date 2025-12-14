@@ -2,12 +2,12 @@ finder_highlighter = {}
 finder_highlighter.__index = finder_highlighter
 local constants = require("plugins.custom.finder.lib.consts")
 
-function finder_highlighter:new(hl_buf, hl_win, hl_namespace, hl_style)
+function finder_highlighter:new(editor_window, hl_style)
     local obj = {
-        hl_buf = hl_buf,
-        hl_win = hl_win,
+        hl_buf = vim.api.nvim_win_get_buf(editor_window),
+        hl_win = editor_window,
         hl_context = constants.buffer.NO_CONTEXT,
-        hl_namespace = hl_namespace,
+        hl_namespace = vim.api.nvim_create_namespace(constants.highlight.FINDER_NAMESPACE),
         hl_style = hl_style,
         hl_fns = self:get_hl_fns(),
         hl_wc_ext_id = constants.highlight.NO_WORD_COUNT_EXTMARK,

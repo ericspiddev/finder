@@ -1,18 +1,21 @@
 
 local constants = require("plugins.custom.finder.lib.consts")
+local highlighter = require("plugins.custom.finder.lib.highlighter")
 finder_search_bar = {}
 finder_search_bar.__index = finder_search_bar
 
 finder_search_bar.VALID_WINDOW_EVENTS = {"on_lines", "on_bytes", "on_changedtick", "on_detach", "on_reload"}
 
-function finder_search_bar:new(query_buffer, window_config, width_percent, should_enter, highlighter)
+function finder_search_bar:new(window_config, width_percent, should_enter)
+    local current_editing_win = vim.api.nvim_get_current_win()
+    vim.print("current editing win is " .. current_editing_win)
     local obj = {
-        query_buffer = query_buffer,
+        query_buffer = constants.buffer.INVALID_BUFFER,
         query_win_config = window_config,
         width_percent = width_percent,
         should_enter = should_enter or true,
         send_buffer = false, -- unused since we use lua cbs
-        highlighter = highlighter,
+        highlighter = highlighter:new(current_editing_win, constants.highlight.MATCH_HIGHLIGHT),
         win_id = constants.window.INVALID_WINDOW_ID
     }
     return setmetatable(obj, self)
