@@ -97,7 +97,7 @@ function M.main()
     vim.api.nvim_create_autocmd({constants.events.BUFFER_ENTER}, {
         callback = M.update_finder_context
     })
-    vim.keymap.set('n', '<leader>f', M.toggle, {})
+    vim.keymap.set('n', '/', M.toggle, {}) -- likely change for obvious reasons later
     vim.keymap.set('n', 'f', M.refocus_search, {})
     vim.keymap.set('n', '<CR>', M.next_match, {
         buffer = M.search_bar.query_buffer,
