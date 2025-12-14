@@ -3,14 +3,14 @@ finder_highlighter.__index = finder_highlighter
 local constants = require("plugins.custom.finder.lib.consts")
 local match_obj = require("plugins.custom.finder.lib.match")
 
-function finder_highlighter:new(editor_window, hl_style, curr_match_hl_style)
+function finder_highlighter:new(editor_window, result_hl_style, selected_hl_style )
     local obj = {
         hl_buf = vim.api.nvim_win_get_buf(editor_window),
         hl_win = editor_window,
         hl_context = constants.buffer.NO_CONTEXT,
         hl_namespace = vim.api.nvim_create_namespace(constants.highlight.FINDER_NAMESPACE),
-        hl_style = hl_style,
-        curr_hl_style = curr_match_hl_style,
+        result_hl_style = result_hl_style,
+        selected_hl_style = selected_hl_style,
         hl_fns = self:get_hl_fns(),
         hl_wc_ext_id = constants.highlight.NO_WORD_COUNT_EXTMARK,
         matches = {},
@@ -96,12 +96,12 @@ end
 
 function finder_highlighter:highlight_pattern_in_line(line_number, word_start, word_end)
     local extmark_id = self.hl_fns.highlight(self.hl_buf, self.hl_namespace, line_number, word_start,
-        { end_col = word_end, hl_group = self.hl_style })
+        { end_col = word_end, hl_group = self.result_hl_style })
     table.insert(self.matches, match_obj:new(line_number + 1, word_start, word_end, extmark_id))
 end
 
 function finder_highlighter:move_cursor(direction)
-    self:set_match_highlighting(self.matches[self.match_index], self.hl_style)
+    self:set_match_highlighting(self.matches[self.match_index], self.result_hl_style)
     self.match_index = ((self.match_index + direction) % (#self.matches + 1))
     if self.match_index < 1 then
         if direction == -1 then
@@ -113,7 +113,7 @@ function finder_highlighter:move_cursor(direction)
     local match = self.matches[self.match_index]
     self.hl_fns.remove_highlight(self.hl_buf, self.hl_namespace, match.extmark_id)
     vim.api.nvim_win_set_cursor(self.hl_win, {match.row, match.m_start})
-    self:set_match_highlighting(match, self.curr_hl_style)
+    self:set_match_highlighting(match, self.selected_hl_style)
     vim.cmd(constants.cmds.CENTER_SCREEN) -- center the screen on our cursor?
 end
 
