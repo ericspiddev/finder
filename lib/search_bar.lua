@@ -60,7 +60,7 @@ end
 function finder_search_bar:move_window(new_col)
     if self:is_open() then
         if new_col > 0 then
-            self.query_win_config.col = new_col
+            self.query_win_config.col = new_col - self.query_win_config.width - 1
             vim.api.nvim_win_set_config(self.win_id, self.query_win_config)
         end
     end

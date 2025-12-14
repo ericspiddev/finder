@@ -7,7 +7,7 @@ function M.setup(config)
 
     _G.Finder_Logger = require("plugins.custom.finder.lib.finder_debug"):new(config.debug_level, vim.print)
     local search_bar_config = {
-        relative='win',
+        relative='editor',
         row=0,
         zindex=1,
         focusable=true,
