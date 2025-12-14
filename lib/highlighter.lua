@@ -1,6 +1,7 @@
 finder_highlighter = {}
 finder_highlighter.__index = finder_highlighter
 local constants = require("plugins.custom.finder.lib.consts")
+local match_obj = require("plugins.custom.finder.lib.match")
 
 function finder_highlighter:new(editor_window, hl_style)
     local obj = {
@@ -12,6 +13,7 @@ function finder_highlighter:new(editor_window, hl_style)
         hl_fns = self:get_hl_fns(),
         hl_wc_ext_id = constants.highlight.NO_WORD_COUNT_EXTMARK,
         matches = {},
+        selected_match_mark = -1,
         match_index = 0
     }
     return setmetatable(obj, self)
@@ -92,14 +94,14 @@ function finder_highlighter:update_search_results(buffer, match_index, list)
     end
 end
 
--- If I were calling this function how would I like to call it...?
 function finder_highlighter:highlight_pattern_in_line(line_number, word_start, word_end)
     self.hl_fns.highlight(self.hl_buf, self.hl_namespace, line_number, word_start,
         { end_col = word_end, hl_group = self.hl_style })
-    table.insert(self.matches, { line_number + 1, word_start })
+    table.insert(self.matches, match_obj:new(line_number + 1, word_start, word_end))
 end
 
 function finder_highlighter:move_cursor(direction)
+    self:remove_selected_match_hl()
     self.match_index = ((self.match_index + direction) % (#self.matches + 1))
     if self.match_index < 1 then
         if direction == -1 then
@@ -108,10 +110,19 @@ function finder_highlighter:move_cursor(direction)
             self.match_index = 1
         end
     end
-    vim.api.nvim_win_set_cursor(self.hl_win, self.matches[self.match_index])
+    local match = self.matches[self.match_index]
+    vim.api.nvim_win_set_cursor(self.hl_win, {match.row, match.m_start})
+    self.selected_match_mark = self.hl_fns.highlight(self.hl_buf, self.hl_namespace, match.row - 1, match.m_start, -- 0 indexed for some reason
+        { end_col = match.m_end, hl_group = constants.highlight.CURR_MATCH_HIGHLIGHT })
     vim.api.nvim_win_call(self.hl_win, function()
         vim.cmd(constants.cmds.CENTER_SCREEN)
     end)
+end
+
+function finder_highlighter:remove_selected_match_hl()
+    if self.selected_match_mark ~= -1 then
+        self.hl_fns.remove_highlight(self.hl_buf, self.hl_namespace, self.selected_match_mark)
+    end
 end
 
 -- returns ID of all highlights (could be expanded if needed)

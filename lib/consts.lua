@@ -25,6 +25,7 @@
          NO_WORD_COUNT_EXTMARK = -1,
          FINDER_NAMESPACE = "finder",
          MATCH_HIGHLIGHT = "Search",
+         CURR_MATCH_HIGHLIGHT = "WildMenu",
      },
      search = {
         FORWARD = 1,
