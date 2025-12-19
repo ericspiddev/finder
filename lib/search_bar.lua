@@ -38,7 +38,7 @@ function finder_search_bar:on_lines_handler(...)
     first_line, last_line,
     new_lastline, bytecount = ...
 
-    local search = self:get_window_contents(first_line, new_lastline) --grab the current contents of the window
+    local search = self:get_window_contents() --grab the current contents of the window
     vim.schedule(function()
         self.highlighter:clear_highlights(self.highlighter.hl_buf, self.query_buffer)
         -- anytime we search update in case the file changed... this needs to be optimized for better performance
@@ -55,8 +55,8 @@ function finder_search_bar:is_open()
     return self.win_id ~= constants.window.INVALID_WINDOW_ID
 end
 
-function finder_search_bar:get_window_contents(first, last)
-    return vim.api.nvim_buf_get_lines(self.query_buffer, first, last, true)[1]
+function finder_search_bar:get_window_contents()
+    return vim.api.nvim_buf_get_lines(self.query_buffer, 0, 1, true)[1]
 end
 
 function finder_search_bar:toggle()
