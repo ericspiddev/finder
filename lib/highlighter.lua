@@ -132,6 +132,7 @@ function finder_highlighter:move_cursor(direction)
     end
     local match = self.matches[self.match_index]
     self.hl_fns.remove_highlight(self.hl_buf, self.hl_namespace, match.extmark_id)
+    vim.print("Setting cursor with " .. match.row .. " and " .. match.m_start)
     vim.api.nvim_win_set_cursor(self.hl_win, {match.row, match.m_start})
     self:set_match_highlighting(match, self.selected_hl_style)
     vim.cmd(constants.cmds.CENTER_SCREEN) -- center the screen on our cursor?
