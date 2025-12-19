@@ -24,12 +24,18 @@ function finder_keymaps:setup_search_keymaps()
         buffer = self.search_bar.query_buffer,
         nowait = true,
         noremap = true})
+
+    vim.keymap.set('n', '<leader>c', function() self.search_bar:toggle_case_sensitivity() end, {
+        buffer = self.search_bar.query_buffer,
+        nowait = true,
+        noremap = true})
 end
 
 function finder_keymaps:teardown_search_keymaps()
     vim.keymap.del('n', 'n', {buffer = self.search_bar.query_buffer })
     vim.keymap.del('n', 'N', {buffer = self.search_bar.query_buffer})
     vim.keymap.del('n', 'c', {buffer = self.search_bar.query_buffer})
+    vim.keymap.del('n', '<leader>c', {buffer = self.search_bar.query_buffer})
 end
 
 return finder_keymaps

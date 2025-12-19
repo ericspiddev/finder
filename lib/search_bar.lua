@@ -29,6 +29,10 @@ function finder_search_bar:set_event_handlers(events)
     self.window_events = events.event_table
 end
 
+function finder_search_bar:toggle_case_sensitivity()
+    self.highlighter:toggle_ignore_case(self.query_buffer)
+end
+
 function finder_search_bar:on_lines_handler(...)
   local event, bufnr, changedtick,
     first_line, last_line,

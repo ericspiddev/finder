@@ -13,6 +13,7 @@ function finder_highlighter:new(editor_window, result_hl_style, selected_hl_styl
         selected_hl_style = selected_hl_style,
         hl_fns = self:get_hl_fns(),
         hl_wc_ext_id = constants.highlight.NO_WORD_COUNT_EXTMARK,
+        ignore_case = true,
         matches = {},
         match_index = 0
     }
@@ -26,6 +27,19 @@ function finder_highlighter:get_hl_fns()
         remove_highlight = vim.api.nvim_buf_del_extmark
     }
     return fns
+end
+
+function finder_highlighter:toggle_ignore_case(query_buffer)
+    self.ignore_case = not self.ignore_case
+    if not self.ignore_case then
+    self.comment_marker = self.hl_fns.highlight(query_buffer, self.hl_namespace, 0, -1, {
+            virt_text = { { "C", "ModeMsg" } },
+            virt_text_pos = "right_align",
+        })
+    else
+        self.hl_fns.remove_highlight(query_buffer, self.hl_namespace, self.comment_marker)
+    end
+
 end
 
 function finder_highlighter:update_hl_context(hl_buf, finder_buf)
@@ -62,7 +76,12 @@ function finder_highlighter:highlight_file_by_pattern(win_buf, pattern)
     end
     for line_number, line in ipairs(self.hl_context) do
         local search_index = 1
-        local pattern_start, pattern_end = string.find(line, pattern)
+        if self.ignore_case then
+            line = string.lower(line)
+            pattern = string.lower(pattern)
+        end
+
+        local pattern_start, pattern_end = string.find(line, pattern) -- find the pattern here...
         while pattern_start ~= nil and pattern ~= "" do
             self:highlight_pattern_in_line(line_number - 1, pattern_start - 1, pattern_end) -- highlight with start index and end index
             search_index = pattern_end + 1
@@ -87,8 +106,9 @@ end
 
 function finder_highlighter:update_search_results(buffer, match_index, list)
     if match_index ~= nil and match_index > -1 and list ~= nil and #list > 0 and buffer ~= constants.buffer.INVALID_BUFFER then
+       local virt_text_str = match_index .. "/" .. #list
        self.hl_wc_ext_id = self.hl_fns.highlight(buffer, self.hl_namespace, 0, -1, {
-            virt_text = { { match_index .. "/" .. #list, "Comment" } },
+            virt_text = { { virt_text_str, "Comment" } },
             virt_text_pos = "right_align",
         })
     end
