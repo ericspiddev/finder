@@ -1,8 +1,7 @@
-
 local constants = require("plugins.custom.finder.lib.consts")
 local highlighter = require("plugins.custom.finder.lib.highlighter")
 local keymaps = require("plugins.custom.finder.lib.keymaps")
-keymap_mgr = nil
+keymap_mgr = nil -- global varaible used to init the keymappings for the search bar
 finder_search_bar = {}
 finder_search_bar.__index = finder_search_bar
 
@@ -25,14 +24,32 @@ function finder_search_bar:new(window_config, width_percent, should_enter)
     return t
 end
 
+-------------------------------------------------------------
+--- search_bar.set_event_handlers: sets the event table to
+--- hold all of the events and their associated handlers
+--- should be called prior to attach_events
+--- @events: valid event's and their handlers to register with
+--- the buffer
+---
 function finder_search_bar:set_event_handlers(events)
     self.window_events = events.event_table
 end
 
+-------------------------------------------------------------
+--- search_bar.toggle_case_sensitivity: toggle whether or not
+--- searching should match case (calls into highlighter)
+---
 function finder_search_bar:toggle_case_sensitivity()
     self.highlighter:toggle_ignore_case(self.query_buffer)
 end
 
+-------------------------------------------------------------
+--- search_bar.on_lines_handler: function that is called when
+--- text is typed or deleted in the search buffer this handler
+--- schedules the matching algo that then highlights text and
+--- allows the user to go to and from search results
+--- @...: varadic arguments not really used however since none
+--- of the parameters are used at this time
 function finder_search_bar:on_lines_handler(...)
   local event, bufnr, changedtick,
     first_line, last_line,
@@ -51,14 +68,26 @@ function finder_search_bar:on_lines_handler(...)
     end)
 end
 
+-------------------------------------------------------------
+--- search_bar.is_open: checks wether or not the finder search
+--- bar is open based on the current window id
+---
 function finder_search_bar:is_open()
     return self.win_id ~= constants.window.INVALID_WINDOW_ID
 end
 
+-------------------------------------------------------------
+--- search_bar.get_window_contents: gets the contents of the
+--- search bar window (currently hardcoded to the first line)
+---
 function finder_search_bar:get_window_contents()
     return vim.api.nvim_buf_get_lines(self.query_buffer, 0, 1, true)[1]
 end
 
+-------------------------------------------------------------
+--- search_bar.toggle: toggles the status of the window so
+--- if it's closed open it and vice versa
+---
 function finder_search_bar:toggle()
     if self:is_open() then
         self:close()
@@ -67,6 +96,13 @@ function finder_search_bar:toggle()
     end
 end
 
+-------------------------------------------------------------
+--- search_bar.move_window: handles moving the search window
+--- so it stays attached to the current buffer it's searching
+--- (i.e a neotree window opens and shrinks current buffer win)
+--- @new_col: the new column where the new window has opened
+--- this is used to calculate where to start the search bar window
+---
 function finder_search_bar:move_window(new_col)
     if self:is_open() then
         if new_col > 0 then
@@ -76,12 +112,23 @@ function finder_search_bar:move_window(new_col)
     end
 end
 
+-------------------------------------------------------------
+--- search_bar.attach_events: adds all of the valid events to
+--- the search bar buffer. This must be called after
+--- set_event_handlers otherwise the event table will be nil
+--- (could combine?)
+---
 function finder_search_bar:attach_events()
     if self.window_events ~= nil then
         vim.api.nvim_buf_attach(self.query_buffer, true, self.window_events)
     end
 end
 
+-------------------------------------------------------------
+--- search_bar.open: opens the search bar for searching this
+--- function considers the width_percent that the bar should
+--- take up and then calculates it's width based on that
+---
 function finder_search_bar:open()
     if not self:is_open() then
         Finder_Logger:debug_print("Opening window")
@@ -103,6 +150,11 @@ function finder_search_bar:open()
     end
 end
 
+-------------------------------------------------------------
+--- search_bar.close: closes the search bar and unregisters
+--- all of the associated keymaps also frees the buffers
+--- associated with the searching
+---
 function finder_search_bar:close()
     if self:is_open() then
         close_id = self.win_id
@@ -118,14 +170,29 @@ function finder_search_bar:close()
     end
 end
 
+-------------------------------------------------------------
+--- search_bar.previous_match KEYMAP: used to move backward in
+--- the match list
+---
 function finder_search_bar:previous_match()
     self:move_selected_match(constants.search.BACKWARD)
 end
 
+-------------------------------------------------------------
+--- search_bar.next_match KEYMAP: used to move forward in the
+--- match list
+---
 function finder_search_bar:next_match()
     self:move_selected_match(constants.search.FORWARD)
 end
 
+-------------------------------------------------------------
+--- search_bar.move_selected_match: moves the search result
+--- in the desired direction taking care of highlighting and
+--- cursor movement
+--- @direction: which way to go when iterating ove the list
+--- (FORWARD OR BACKWARD)
+---
 function finder_search_bar:move_selected_match(direction)
     if self.highlighter.matches ~= nil and #self.highlighter.matches > 0 then
         self.highlighter:clear_match_count(self.query_buffer)
@@ -138,6 +205,10 @@ function finder_search_bar:move_selected_match(direction)
     end
 end
 
+-------------------------------------------------------------
+--- search_bar.clear_search KEYMAP: used to clear the contents
+--- of the search bar buffer and window
+---
 function finder_search_bar:clear_search()
     vim.api.nvim_buf_set_lines(self.query_buffer, constants.lines.START, constants.lines.END,
                               true, constants.buffer.EMPTY_BUFFER)

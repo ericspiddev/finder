@@ -20,6 +20,15 @@ function finder_highlighter:new(editor_window, result_hl_style, selected_hl_styl
     return setmetatable(obj, self)
 end
 
+-------------------------------------------------------------
+--- highlighter.get_hls_fns: gets highlight functions table
+--- that is responsible for any highlight operations this
+--- table currently returns extmark api functions
+--- operation           function
+--- highlight           nvim_buf_set_extmark
+--- get_highlights      nvim_buf_get_extmarks
+--- remove              nvim_buf_del_extmark
+---
 function finder_highlighter:get_hl_fns()
     local fns = {
         highlight = vim.api.nvim_buf_set_extmark,
@@ -29,6 +38,13 @@ function finder_highlighter:get_hl_fns()
     return fns
 end
 
+-------------------------------------------------------------
+--- highlight.toggle_ignore_case: this tells the highlighter
+--- wether or it should ignore the case of the current search
+--- pattern. It also adds a 'C' to the query buffer if the
+--- query is matching case
+--- @query_buffer: search bar buffer that we add the 'C' too
+---
 function finder_highlighter:toggle_ignore_case(query_buffer)
     self.ignore_case = not self.ignore_case
     if not self.ignore_case then
@@ -42,11 +58,25 @@ function finder_highlighter:toggle_ignore_case(query_buffer)
 
 end
 
+-------------------------------------------------------------
+--- highlight.update_hl_context: clears the search
+--- result numbers in the search_bar and then reads the buffer
+--- id into hl_context field
+--- @hl_buf: the buffer that will have it's contents loaded into hl_context
+--- @finder_buf: search bar buffer this is used to clear search numbers
+--- (rename to query_buffer or use buf directly?)
+---
 function finder_highlighter:update_hl_context(hl_buf, finder_buf)
     self:clear_match_count(finder_buf)
     self:populate_hl_context(hl_buf)
 end
 
+-------------------------------------------------------------
+--- highlighter.populate_hl_context: loads the content of the
+--- buffer into the 'hl_context' field. This field is used
+--- when seraching for the pattern in the query buffer
+--- @buf_id: the buffer to load into highlight context field
+---
 function finder_highlighter:populate_hl_context(buf_id)
     if not vim.api.nvim_buf_is_valid(buf_id) then
         Finder_Logger.warning_print("Attempting to populate context with invalid buffer id")
@@ -64,6 +94,13 @@ function finder_highlighter:populate_hl_context(buf_id)
     end
 end
 
+-------------------------------------------------------------
+--- highlight.highlight_file_by_pattern: highlights the current
+--- hl_context if it matches the pattern. It also updates the
+--- search_results virtual text in the search buffer
+--- @win_buf: the buffer to update the search results ex (3/5) in
+--- @pattern: the pattern to highlight within the hl_context
+---
 function finder_highlighter:highlight_file_by_pattern(win_buf, pattern)
 
     if pattern == nil then
@@ -83,7 +120,8 @@ function finder_highlighter:highlight_file_by_pattern(win_buf, pattern)
 
         local pattern_start, pattern_end = string.find(line, pattern) -- find the pattern here...
         while pattern_start ~= nil and pattern ~= "" do
-            self:highlight_pattern_in_line(line_number - 1, pattern_start - 1, pattern_end) -- highlight with start index and end index
+            -- highlight with start index and end index
+            self:highlight_pattern_in_line(line_number - 1, pattern_start - 1, pattern_end)
             search_index = pattern_end + 1
             pattern_start, pattern_end = string.find(line, pattern, search_index)
         end
@@ -95,17 +133,32 @@ function finder_highlighter:highlight_file_by_pattern(win_buf, pattern)
     end
 end
 
+-------------------------------------------------------------
+--- highlighter.clear_match_count: clear the match count that
+--- tracks current search result in the search window
+--- @buffer: the buffer that the match count is present in (query buf)
+---
 function finder_highlighter:clear_match_count(buffer)
     if self.hl_wc_ext_id ~= constants.highlight.NO_WORD_COUNT_EXTMARK
-        and buffer ~= nil
-        and vim.api.nvim_buf_is_valid(buffer) then
+    and buffer ~= nil
+    and vim.api.nvim_buf_is_valid(buffer) then
         self.hl_fns.remove_highlight(buffer, self.hl_namespace, self.hl_wc_ext_id)
         self.hl_wc_ext_id = constants.highlight.NO_WORD_COUNT_EXTMARK
     end
 end
 
+--------------------------------------------------------------
+--- highlighter.update_search_results: responsible for updating
+--- the virt text with the current match index e.x(3/5) that shows
+--- in the search bar buffer
+--- @buffer: the buffer where the search count is located (query_buffer)
+--- @match_index: the match_index that will be displayed left of the /
+--- @list: total search results that match the current pattern (right of the /)
+---
 function finder_highlighter:update_search_results(buffer, match_index, list)
-    if match_index ~= nil and match_index > -1 and list ~= nil and #list > 0 and buffer ~= constants.buffer.INVALID_BUFFER then
+    if match_index ~= nil and match_index > -1
+        and list ~= nil and #list > 0
+        and buffer ~= constants.buffer.INVALID_BUFFER then
        local virt_text_str = match_index .. "/" .. #list
        self.hl_wc_ext_id = self.hl_fns.highlight(buffer, self.hl_namespace, 0, -1, {
             virt_text = { { virt_text_str, "Comment" } },
@@ -114,12 +167,27 @@ function finder_highlighter:update_search_results(buffer, match_index, list)
     end
 end
 
+--------------------------------------------------------------
+--- highlighter.highlight_pattern_in_line: using the line number
+--- and start/end of the word this highlights the word on that
+--- line and then creates a new match object and inserts it
+--- into the self.matches table for bookkeeping of all matches
+--- @line_number: the line number (row) that the word is located on
+--- @word_start: start index (col) of the word on the line
+--- @word_end: end index (col) of the word on the line
+---
 function finder_highlighter:highlight_pattern_in_line(line_number, word_start, word_end)
     local extmark_id = self.hl_fns.highlight(self.hl_buf, self.hl_namespace, line_number, word_start,
         { end_col = word_end, hl_group = self.result_hl_style })
     table.insert(self.matches, match_obj:new(line_number + 1, word_start, word_end, extmark_id))
 end
 
+-------------------------------------------------------------
+--- highligher.move_cursor: moves the user's cursor along matched
+--- patterns throughout the hl_context it also updates the current
+--- search result to be highlighted differently to show it's selected
+--- @direction: which way to iterate through matches (forward or backward)
+---
 function finder_highlighter:move_cursor(direction)
     self:set_match_highlighting(self.matches[self.match_index], self.result_hl_style)
     self.match_index = ((self.match_index + direction) % (#self.matches + 1))
@@ -138,6 +206,13 @@ function finder_highlighter:move_cursor(direction)
     vim.cmd(constants.cmds.CENTER_SCREEN) -- center the screen on our cursor?
 end
 
+-------------------------------------------------------------
+--- highligher.set_match_highlighting:
+--- patterns throughout the hl_context it also updates the current
+--- search result to be highlighted differently to show it's selected
+--- @match: which way to iterate through matches (forward or backward)
+--- @hl: the style to highlight the passed in match
+--- (move me to match class??? weird spot with this one)
 function finder_highlighter:set_match_highlighting(match, hl)
     if match ~= nil then
         local ext_id = self.hl_fns.highlight(self.hl_buf, self.hl_namespace, match.row -1, match.m_start,
@@ -146,7 +221,12 @@ function finder_highlighter:set_match_highlighting(match, hl)
     end
 end
 
--- returns ID of all highlights (could be expanded if needed)
+-------------------------------------------------------------
+--- highlighter.get_buffer_current_hls: gets all of the current
+--- highlighted text extmarks and loads them into a table this
+--- only effects extmarks this class sets because of the namespace
+--- @buffer: the buffer with the highlight extmarks to retrieve
+---
 function finder_highlighter:get_buffer_current_hls(buffer)
     local ids = {}
     ID_INDEX = 1
@@ -160,6 +240,13 @@ function finder_highlighter:get_buffer_current_hls(buffer)
     return ids
 end
 
+-------------------------------------------------------------
+--- highlighter.clear_highlights: clears all of the currently
+--- highlighted text in a buffer. Also clears the match_count
+--- in the search window
+--- @hl_buf: buffer that is currently being searched (likely shown in current window)
+--- @win_buf: query buffer that holds the match count e.x. (3/5)
+---
 function finder_highlighter:clear_highlights(hl_buf, win_buf)
     self:clear_match_count(win_buf)
     for _, highlight in ipairs(self:get_buffer_current_hls(hl_buf)) do
