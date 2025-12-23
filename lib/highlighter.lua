@@ -1,7 +1,7 @@
 finder_highlighter = {}
 finder_highlighter.__index = finder_highlighter
-local constants = require("plugins.custom.finder.lib.consts")
-local match_obj = require("plugins.custom.finder.lib.match")
+local constants = require("lib.consts")
+local match_obj = require("lib.match")
 
 function finder_highlighter:new(editor_window, result_hl_style, selected_hl_style )
     local obj = {

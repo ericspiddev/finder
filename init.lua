@@ -1,11 +1,11 @@
-local events = require("plugins.custom.finder.lib.events")
-local search_bar = require("plugins.custom.finder.lib.search_bar")
-local constants = require("plugins.custom.finder.lib.consts")
+local events = require("lib.events")
+local search_bar = require("lib.search_bar")
+local constants = require("lib.consts")
 local M = {}
 
 function M.setup(config)
 
-    _G.Finder_Logger = require("plugins.custom.finder.lib.finder_debug"):new(config.debug_level, vim.print)
+    _G.Finder_Logger = require("lib.finder_debug"):new(config.debug_level, vim.print)
     local search_bar_config = {
         relative='editor',
         row=0,

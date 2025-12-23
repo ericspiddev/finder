@@ -1,6 +1,6 @@
-local constants = require("plugins.custom.finder.lib.consts")
-local highlighter = require("plugins.custom.finder.lib.highlighter")
-local keymaps = require("plugins.custom.finder.lib.keymaps")
+local constants = require("lib.consts")
+local highlighter = require("lib.highlighter")
+local keymaps = require("lib.keymaps")
 keymap_mgr = nil -- global varaible used to init the keymappings for the search bar
 finder_search_bar = {}
 finder_search_bar.__index = finder_search_bar
