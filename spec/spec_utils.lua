@@ -25,7 +25,7 @@ end
 
 function spec_utils:finder_print_was_called(level, message, var)
     if mock_debug == nil then
-        return
+        assert(false)
     end
     local print_fn = nil
     if level == debug.DEBUG_LEVELS.ERROR then
@@ -51,6 +51,13 @@ function spec_utils:finder_print_was_called(level, message, var)
     end
     print_fn:clear() -- clears the call history
 
+end
+
+function spec_utils:register_global_logger()
+    vim.print("yep")
+    if _G.Finder_Logger == nil then
+        _G.Finder_Logger = require("lib.finder_debug"):new(debug.DEBUG_LEVELS.OFF, vim.print)
+    end
 end
 
 function spec_utils:revert_debug_prints()

@@ -2,6 +2,7 @@ local events = require('lib.events')
 local stub = require('luassert.stub')
 local utils = require('spec.spec_utils')
 local debug_levels = require('lib.finder_debug').DEBUG_LEVELS
+utils:register_global_logger()
 
 function create_event(valid_events)
     return events:new(valid_events)

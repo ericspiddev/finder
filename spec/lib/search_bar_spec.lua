@@ -2,7 +2,8 @@
 local stub = require('luassert.stub')
 local consts = require('lib.consts')
 local search_bar_t = require('lib.search_bar')
-local util = require('spec.spec_utils')
+local utils = require('spec.spec_utils')
+utils:register_global_logger()
 
 -- test constants
 SEARCH_BAR_BUF_ID = 1
@@ -12,7 +13,7 @@ SEARCH_BAR_WIDTH_PERCENT = 0.25
 
 -- hepler functions
 function setup_search_tests()
-    util:mock_debug_prints()
+    utils:mock_debug_prints()
     -- STUBS to mock out so we aren't hitting the real API
     stub(vim.api, "nvim_create_buf").returns(SEARCH_BAR_BUF_ID)
     stub(vim.api, "nvim_open_win").returns(SEARCH_BAR_WIN_ID)
