@@ -7,10 +7,11 @@ finder_search_bar = {}
 finder_search_bar.__index = finder_search_bar
 
 finder_search_bar.VALID_WINDOW_EVENTS = {"on_lines", "on_bytes", "on_changedtick", "on_detach", "on_reload"}
+finder_search_bar.MIN_WIDTH = 0.10
+finder_search_bar.MAX_WIDTH = 1
 
 function finder_search_bar:new(window_config, width_percent, should_enter)
     local current_editing_win = vim.api.nvim_get_current_win()
-    vim.print("current editing win is " .. current_editing_win)
     local obj = {
         query_buffer = constants.buffer.INVALID_BUFFER,
         query_win_config = window_config,
@@ -121,10 +122,11 @@ function finder_search_bar:open()
     if not self:is_open() then
         Finder_Logger:debug_print("Opening window")
         local window = vim.api.nvim_get_current_win()
+        self.search_window = window
+        self.width_percent = self:cap_width(self.width_percent)
         self.query_buffer = vim.api.nvim_create_buf(constants.buffer.LIST_BUFFER, constants.buffer.SCRATCH_BUFFER)
         self.query_win_config.width = math.floor(vim.api.nvim_win_get_width(window) * self.width_percent)
         self.query_win_config.col = vim.api.nvim_win_get_width(window)
-        self.search_window = window
         self.win_id = vim.api.nvim_open_win(self.query_buffer, self.should_enter, self.query_win_config)
         if self.highlighter.hl_context == constants.buffer.NO_CONTEXT then
             Finder_Logger:warning_print("No valid context found attempting to populate now")
