@@ -20,6 +20,7 @@
         EMPTY_BUFFER = {},
         SCRATCH_BUFFER = true,
         LIST_BUFFER = true,
+        VALID_LUA_EVENTS = {"on_lines", "on_bytes", "on_changedtick", "on_detach", "on_reload"}
      },
      highlight = {
          NO_WORD_COUNT_EXTMARK = -1,

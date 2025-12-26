@@ -22,10 +22,6 @@ function M.setup(config)
 
     M.search_bar = search_bar:new(search_bar_config, config.width_percentage, true)
     M.search_bar.highlighter:populate_hl_context(constants.window.CURRENT_WINDOW)
-    M.window_events = events:new(search_bar.VALID_WINDOW_EVENTS)
-    M.window_events:add_event("on_lines", M.search_bar, "on_lines_handler")
-    M.search_bar:set_event_handlers(M.window_events)
-
     M.main()
 end
 

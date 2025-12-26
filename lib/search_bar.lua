@@ -1,6 +1,7 @@
 local constants = require("lib.consts")
 local highlighter = require("lib.highlighter")
 local keymaps = require("lib.keymaps")
+local events = require("lib.events")
 keymap_mgr = nil -- global varaible used to init the keymappings for the search bar
 finder_search_bar = {}
 finder_search_bar.__index = finder_search_bar
@@ -17,22 +18,12 @@ function finder_search_bar:new(window_config, width_percent, should_enter)
         should_enter = should_enter or true,
         send_buffer = false, -- unused since we use lua cbs
         highlighter = highlighter:new(current_editing_win, constants.highlight.MATCH_HIGHLIGHT, constants.highlight.CURR_MATCH_HIGHLIGHT),
+        search_events = nil,
         win_id = constants.window.INVALID_WINDOW_ID,
     }
     t = setmetatable(obj, self)
     keymap_mgr = keymaps:new(t)
     return t
-end
-
--------------------------------------------------------------
---- search_bar.set_event_handlers: sets the event table to
---- hold all of the events and their associated handlers
---- should be called prior to attach_events
---- @events: valid event's and their handlers to register with
---- the buffer
----
-function finder_search_bar:set_event_handlers(events)
-    self.window_events = events.event_table
 end
 
 -------------------------------------------------------------
@@ -112,16 +103,13 @@ function finder_search_bar:move_window(new_col)
     end
 end
 
--------------------------------------------------------------
---- search_bar.attach_events: adds all of the valid events to
---- the search bar buffer. This must be called after
---- set_event_handlers otherwise the event table will be nil
---- (could combine?)
----
-function finder_search_bar:attach_events()
-    if self.window_events ~= nil then
-        vim.api.nvim_buf_attach(self.query_buffer, true, self.window_events)
+function finder_search_bar:cap_width(width)
+    if width > self.MAX_WIDTH then
+        width = self.MAX_WIDTH
+    elseif width < self.MIN_WIDTH then
+        width = self.MIN_WIDTH
     end
+    return width
 end
 
 -------------------------------------------------------------
@@ -142,7 +130,9 @@ function finder_search_bar:open()
             Finder_Logger:warning_print("No valid context found attempting to populate now")
             self.highlighter:update_hl_context(window, self.win_id)
         end
-        self:attach_events() -- pass through like {on_lines: lines_handler}
+        self.search_events = events:new(constants.buffer.VALID_LUA_EVENTS) -- make new events table with buffer events
+        self.search_events:add_event("on_lines", self, "on_lines_handler") -- add the on_lines_handler to search bar's
+        self.search_events:attach_buffer_events(self.query_buffer)
         vim.cmd('startinsert') -- allow for typing right away
         keymap_mgr:setup_search_keymaps()
     else
