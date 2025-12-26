@@ -1,0 +1,66 @@
+local debug = require('lib.finder_debug')
+local mock = require('luassert.mock')
+local match = require('luassert.match')
+spec_utils = {}
+
+spec_utils.__index = spec_utils
+local mock_debug = nil
+
+function spec_utils:table_contains(table, check)
+   for _, value in pairs(table) do
+        if value == check then
+            return true
+        end
+    end
+    return false
+end
+
+function spec_utils:mock_debug_prints()
+    mock_debug = mock(debug, true)
+    mock_debug.debug_print.returns()
+    mock_debug.info_print.returns()
+    mock_debug.warning_print.returns()
+    mock_debug.error_print.returns()
+end
+
+function spec_utils:finder_print_was_called(level, message, var)
+    if mock_debug == nil then
+        return
+    end
+    local print_fn = nil
+    if level == debug.DEBUG_LEVELS.ERROR then
+        print_fn = mock_debug.error_print
+    elseif level == debug.DEBUG_LEVELS.WARNING then
+        print_fn = mock_debug.warning_print
+    elseif level == debug.DEBUG_LEVELS.INFO then
+        print_fn = mock_debug.info_print
+    elseif level == debug.DEBUG_LEVELS.DEBUG then
+        print_fn = mock_debug.debug_print
+    else
+        return
+    end
+
+    if var == nil then
+        assert.stub(print_fn).was_called_with(match.is_table(), message)
+    else
+        if type(var) == 'table' then
+            assert.stub(print_fn).was_called_with(match.is_table(), message, match.is_table())
+        else
+            assert.stub(print_fn).was_called_with(match.is_table(), message, match.is_equal(var))
+        end
+    end
+    print_fn:clear() -- clears the call history
+
+end
+
+function spec_utils:revert_debug_prints()
+    if mock_debug ~= nil then
+        mock_debug.debug_print:revert()
+        mock_debug.info_print:revert()
+        mock_debug.warning_print:revert()
+        mock_debug.error_print:revert()
+        mock_debug = nil
+    end
+end
+
+return spec_utils
