@@ -70,10 +70,19 @@ function finder_debug:finder_print(level, prefix, msg, variable)
             if next(variable) ~= nil then
                 dbg_msg = dbg_msg .. vim.inspect(variable)
             end
+
+        elseif type(variable) == 'function' then
+                dbg_msg = dbg_msg .. vim.inspect(variable)
         else
             dbg_msg = dbg_msg .. variable
         end
-        self.log_function(dbg_msg)
+        if self.log_function == nil then
+            vim.print("Unable to print, nil log function")
+        elseif type(self.log_function) ~= 'function' then
+            vim.print("Unable to print, internal log function is not a function type " .. type(self.log_function))
+        else
+            self.log_function(dbg_msg)
+        end
     end
 end
 
@@ -84,7 +93,15 @@ end
 --- @level: level of debug to comapre against our set level
 ---
 function finder_debug:check_debug_level(level)
-    return level >= self.debug_level
+    if level == nil then
+        vim.print("Nil level ignoring")
+        return false
+    elseif type(level) ~= "number" then
+        vim.print("Type is not number cannot compare")
+        return false
+    else
+        return level >= self.debug_level
+    end
 end
 
 return finder_debug
