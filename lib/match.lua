@@ -11,6 +11,14 @@ function finder_match:new(line, word_start, word_end, ext_mark_id)
     return setmetatable(obj, self)
 end
 
+function finder_match:get_cursor_row()
+    return self.row
+end
+
+function finder_match:get_highlight_row()
+    return self.row - 1
+end
+
 -------------------------------------------------------------
 --- match.update_extmark_id: this function is responsible for
 --- updating the extmark associated with a match. This is used
