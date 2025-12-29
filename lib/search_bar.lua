@@ -187,11 +187,9 @@ end
 ---
 function finder_search_bar:move_selected_match(direction)
     if self.highlighter.matches ~= nil and #self.highlighter.matches > 0 then
-        self.highlighter:clear_match_count(self.query_buffer)
-        self.highlighter:update_search_results(self.query_buffer,
-                                               self.highlighter.match_index,
-                                               self.highlighter.matches)
         self.highlighter:move_cursor(direction)
+        self.highlighter:clear_match_count(self.query_buffer)
+        self.highlighter:update_match_count(self.query_buffer)
     else
         Finder_Logger:debug_print("Matches is either undefined or empty ignoring enter")
     end

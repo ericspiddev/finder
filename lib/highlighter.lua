@@ -126,10 +126,9 @@ function finder_highlighter:highlight_file_by_pattern(win_buf, pattern)
             pattern_start, pattern_end = string.find(line, pattern, search_index)
         end
     end
-
-    if #self.matches > 0 and pattern ~= "" then
-        vim.print("matches > 0... index is " .. self.match_index .. " and matches holds " .. #self.matches)
-        self:update_search_results(win_buf, self.match_index, self.matches)
+    if #self.matches > 0 then
+        --vim.print("matches > 0... index is " .. self.match_index .. " and matches holds " .. #self.matches)
+        self:update_match_count(win_buf)
     end
 end
 
@@ -148,22 +147,24 @@ function finder_highlighter:clear_match_count(buffer)
 end
 
 --------------------------------------------------------------
---- highlighter.update_search_results: responsible for updating
+--- highlighter.update_match_count: responsible for updating
 --- the virt text with the current match index e.x(3/5) that shows
 --- in the search bar buffer
 --- @buffer: the buffer where the search count is located (query_buffer)
---- @match_index: the match_index that will be displayed left of the /
---- @list: total search results that match the current pattern (right of the /)
 ---
-function finder_highlighter:update_search_results(buffer, match_index, list)
-    if match_index ~= nil and match_index > -1
-        and list ~= nil and #list > 0
+function finder_highlighter:update_match_count(buffer)
+    local match = self.match_index
+    local match_list = self.matches
+    if match ~= nil and match > -1
+        and match_list ~= nil and #match_list > 0
+        and match <= #match_list
         and buffer ~= constants.buffer.INVALID_BUFFER then
-       local virt_text_str = match_index .. "/" .. #list
+       local virt_text_str = match .. "/" .. #match_list
        self.hl_wc_ext_id = self.hl_fns.highlight(buffer, self.hl_namespace, 0, -1, {
             virt_text = { { virt_text_str, "Comment" } },
             virt_text_pos = "right_align",
         })
+        return virt_text_str
     end
 end
 
