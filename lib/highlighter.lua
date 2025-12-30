@@ -267,6 +267,25 @@ function finder_highlighter:clear_highlights(hl_buf, win_buf)
         self.hl_fns.remove_highlight(self.hl_buf, self.hl_namespace, match_id)
     end
 end
+
+function finder_highlighter:dump_context()
+    vim.print("Dump context: ")
+    if self.hl_context ~= nil then
+        for line_number, line in ipairs(self.hl_context) do
+            vim.print("Line " .. line_number .. " :" .. line .. "total cols: " .. #line)
+        end
+    end
+
+    vim.print("----------------------------------------")
+    vim.print("Dump window: " .. self.hl_win)
+    if vim.api.nvim_win_is_valid(self.hl_win) then
+        local buf = vim.api.nvim_win_get_buf(self.hl_win)
+        if vim.api.nvim_buf_is_valid then
+            local total_lines = vim.api.nvim_buf_line_count(buf)
+            for line_number, line in ipairs(vim.api.nvim_buf_get_lines(buf, constants.lines.START, total_lines, false)) do
+                vim.print("Line " .. line_number .. " :" .. line .. "total cols: " .. #line)
+            end
+        end
     end
 end
 
