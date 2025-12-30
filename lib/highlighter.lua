@@ -65,10 +65,11 @@ end
 --- @hl_buf: the buffer that will have it's contents loaded into hl_context
 --- @finder_buf: search bar buffer this is used to clear search numbers
 --- (rename to query_buffer or use buf directly?)
+--- @return: whether or not the context was updated
 ---
 function finder_highlighter:update_hl_context(hl_buf, finder_buf)
     self:clear_match_count(finder_buf)
-    self:populate_hl_context(hl_buf)
+    return self:populate_hl_context(hl_buf)
 end
 
 -------------------------------------------------------------
@@ -76,21 +77,31 @@ end
 --- buffer into the 'hl_context' field. This field is used
 --- when seraching for the pattern in the query buffer
 --- @buf_id: the buffer to load into highlight context field
+--- @return: whether or not the context was populated
 ---
 function finder_highlighter:populate_hl_context(buf_id)
     if not vim.api.nvim_buf_is_valid(buf_id) then
         Finder_Logger.warning_print("Attempting to populate context with invalid buffer id")
-        return
+        self.hl_context = constants.buffer.NO_CONTEXT
+        self.hl_buf = constants.buffer.INVALID_BUFFER
+        return false
     end
-    self.hl_buf = buf_id
     local total_lines = vim.api.nvim_buf_line_count(buf_id)
     if total_lines > 0 then
+        self.hl_buf = buf_id
+        self.hl_win = vim.fn.bufwinid(buf_id)
+
+        Finder_Logger:debug_print("Populating context with " .. total_lines .. " total lines")
+
         Finder_Logger:debug_print("Populating context with " .. total_lines .. " total lines")
         self.hl_context = vim.api.nvim_buf_get_lines(buf_id, constants.lines.START, total_lines, false)
         Finder_Logger:debug_print("HL context set too " .. vim.inspect(self.hl_context))
+        return true
     else
         Finder_Logger:warning_print("No valid lines found to populate highlight context")
         self.hl_context = constants.buffer.NO_CONTEXT
+        self.hl_buf = constants.buffer.INVALID_BUFFER
+        return false
     end
 end
 
