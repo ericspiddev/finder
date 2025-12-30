@@ -1,6 +1,5 @@
 local stub = require('luassert.stub')
 local debug = require('lib.finder_debug')
-local consts = require('lib.consts')
 
 describe("Finder", function()
 
