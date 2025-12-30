@@ -52,7 +52,7 @@ function finder_search_bar:on_lines_handler(...)
         self.highlighter:clear_highlights(self.highlighter.hl_buf, self.query_buffer)
         -- anytime we search update in case the file changed... this needs to be optimized for better performance
         self.highlighter:update_hl_context(self.highlighter.hl_buf, self.query_buffer)
-        self.highlighter.match_index = 0
+        self.highlighter.match_index = 1
         self.highlighter.matches = {}
         Finder_Logger:debug_print("Searching buffer for pattern ", search)
         self.highlighter:highlight_file_by_pattern(self.query_buffer, search)

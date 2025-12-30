@@ -15,7 +15,7 @@ function finder_highlighter:new(editor_window, result_hl_style, selected_hl_styl
         hl_wc_ext_id = constants.highlight.NO_WORD_COUNT_EXTMARK,
         ignore_case = true,
         matches = {},
-        match_index = 0
+        match_index = 1
     }
     return setmetatable(obj, self)
 end
@@ -189,17 +189,30 @@ end
 --- search result to be highlighted differently to show it's selected
 --- @direction: which way to iterate through matches (forward or backward)
 ---
-function finder_highlighter:move_cursor(direction)
+function finder_highlighter:move_cursor(step)
+    if step == 0 then
+        return
+    end
+
+    if self.hl_win == constants.window.INVALID_WINDOW_ID then
+        Finder_Logger:error_print("Invalid window id to move cursor through" )
+        return
+    end
+
+    local buf_window = vim.fn.bufwinid(self.hl_buf)
+    if self.hl_win ~= buf_window then
+        Finder_Logger:warning_print("Window id holding buffer and stored highlight window mismatch!")
+        Finder_Logger:warning_print("Expected to move cursor for window ", buf_window)
+        Finder_Logger:warning_print("Actually moving through ", self.hl_win)
+    end
+
     self:set_match_highlighting(self.matches[self.match_index], self.result_hl_style)
-    self.match_index = ((self.match_index + direction) % (#self.matches + 1))
-    if self.match_index < 1 then
-        if direction == -1 then
-            self.match_index = #self.matches
-        else
-            self.match_index = 1
-        end
+    self.match_index = ((self.match_index + step) % (#self.matches)) -- shift up from 1 - #matches (stupid lua indexing)
+    if self.match_index == 0 then
+        self.match_index = #self.matches
     end
     local match = self.matches[self.match_index]
+
     self.hl_fns.remove_highlight(self.hl_buf, self.hl_namespace, match.extmark_id)
     vim.api.nvim_win_set_cursor(self.hl_win, {match:get_cursor_row(), match.m_start})
     self:set_match_highlighting(match, self.selected_hl_style)
