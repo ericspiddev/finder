@@ -242,13 +242,14 @@ end
 ---
 function finder_highlighter:get_buffer_current_hls(buffer)
     local ids = {}
-    ID_INDEX = 1
     if buffer == nil or not vim.api.nvim_buf_is_valid(buffer) then
         Finder_Logger:warning_print("Invalid buffer to serach", buffer)
-        return
+        return nil
     end
-    for _, highlight in ipairs(self.hl_fns.get_all_highlights(buffer, self.hl_namespace, 0, -1, {})) do
-        table.insert(ids, highlight[ID_INDEX])
+    if self.matches ~= nil then
+        for _, match in ipairs(self.matches) do
+            table.insert(ids, match.extmark_id)
+        end
     end
     return ids
 end
@@ -262,8 +263,10 @@ end
 ---
 function finder_highlighter:clear_highlights(hl_buf, win_buf)
     self:clear_match_count(win_buf)
-    for _, highlight in ipairs(self:get_buffer_current_hls(hl_buf)) do
-        self.hl_fns.remove_highlight(self.hl_buf, self.hl_namespace, highlight)
+    for _, match_id in ipairs(self:get_buffer_current_hls(hl_buf)) do
+        self.hl_fns.remove_highlight(self.hl_buf, self.hl_namespace, match_id)
+    end
+end
     end
 end
 
