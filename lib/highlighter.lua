@@ -114,14 +114,15 @@ end
 ---
 function finder_highlighter:highlight_file_by_pattern(win_buf, pattern)
 
-    if pattern == nil then
-        Finder_Logger:warning_print("Nil pattern cancelling search")
+    if pattern == nil or pattern == "" then
+        Finder_Logger:warning_print("Nil or empty pattern cancelling search")
         return
     end
     if self.hl_context == constants.buffer.NO_CONTEXT then
         Finder_Logger:warning_print("No context to search through")
         return
     end
+
     for line_number, line in ipairs(self.hl_context) do
         local search_index = 1
         if self.ignore_case then
@@ -130,7 +131,7 @@ function finder_highlighter:highlight_file_by_pattern(win_buf, pattern)
         end
 
         local pattern_start, pattern_end = string.find(line, pattern) -- find the pattern here...
-        while pattern_start ~= nil and pattern ~= "" do
+        while pattern_start ~= nil do
             -- highlight with start index and end index
             self:highlight_pattern_in_line(line_number - 1, pattern_start - 1, pattern_end)
             search_index = pattern_end + 1
