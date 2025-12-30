@@ -6,6 +6,17 @@ spec_utils = {}
 spec_utils.__index = spec_utils
 local mock_debug = nil
 
+function spec_utils:compare_matches(m1, m2)
+    if not (m1.row == m2.row and
+            m1.m_start == m2.m_start and
+            m1.m_end == m2.m_end) then
+        vim.print("Match 1 is " .. vim.inspect(m1))
+        vim.print("Match 2 is " .. vim.inspect(m2))
+    else
+        return true
+    end
+end
+
 function spec_utils:table_contains(table, check)
    for _, value in pairs(table) do
         if value == check then
@@ -21,6 +32,18 @@ function spec_utils:mock_debug_prints()
     mock_debug.info_print.returns()
     mock_debug.warning_print.returns()
     mock_debug.error_print.returns()
+end
+
+function spec_utils:lists_are_equal(t1, t2)
+    if #t1 ~= #t2 then
+        return false
+    end
+    for index = 1, #t1 do
+        if t1[index] ~= t2[index] then
+            return false
+        end
+    end
+    return true
 end
 
 function spec_utils:finder_print_was_called(level, message, var)
