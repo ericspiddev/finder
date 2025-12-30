@@ -1,4 +1,4 @@
-local events = require("lib.events")
+package.path = package.path .. ";/home/ericspidle/.config/nvim/lua/plugins/custom/finder/?.lua"
 local search_bar = require("lib.search_bar")
 local constants = require("lib.consts")
 local M = {}
