@@ -77,7 +77,6 @@ function spec_utils:finder_print_was_called(level, message, var)
 end
 
 function spec_utils:register_global_logger()
-    vim.print("yep")
     if _G.Finder_Logger == nil then
         _G.Finder_Logger = require("lib.finder_debug"):new(debug.DEBUG_LEVELS.OFF, vim.print)
     end
