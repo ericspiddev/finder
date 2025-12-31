@@ -4,6 +4,7 @@ local utils = require('spec.spec_utils')
 local consts = require('lib.consts')
 local match_object = require('lib.match')
 local assert_match = require('luassert.match')
+utils:register_global_logger()
 
 function create_fake_buffer(contents)
     stub(vim.api, "nvim_buf_line_count").returns(#contents)
