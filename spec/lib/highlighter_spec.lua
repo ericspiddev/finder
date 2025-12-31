@@ -1,7 +1,7 @@
 local highlight = require('lib.highlighter')
 local stub = require('luassert.stub')
 local utils = require('spec.spec_utils')
-local constants = require('lib.consts')
+local consts = require('lib.consts')
 local match_object = require('lib.match')
 local assert_match = require('luassert.match')
 
@@ -88,8 +88,8 @@ describe('highlighter', function ()
 
         create_fake_buffer("")
         assert(not hl:populate_hl_context(buf_id))
-        assert.equals(hl.hl_context, constants.buffer.NO_CONTEXT)
-        assert.equals(hl.hl_buf, constants.buffer.INVALID_BUFFER)
+        assert.equals(hl.hl_context, consts.buffer.NO_CONTEXT)
+        assert.equals(hl.hl_buf, consts.buffer.INVALID_BUFFER)
 
         buf_id = 12
         create_fake_buffer(buf_content)
@@ -99,8 +99,8 @@ describe('highlighter', function ()
 
         stub(vim.api, "nvim_buf_is_valid").returns(false)
         assert(not hl:populate_hl_context(buf_id))
-        assert.equals(hl.hl_context, constants.buffer.NO_CONTEXT)
-        assert.equals(hl.hl_buf, constants.buffer.INVALID_BUFFER)
+        assert.equals(hl.hl_context, consts.buffer.NO_CONTEXT)
+        assert.equals(hl.hl_buf, consts.buffer.INVALID_BUFFER)
     end)
 
 
@@ -219,7 +219,7 @@ describe('highlighter', function ()
         hl:clear_match_count(nil)
         assert.stub(vim.api.nvim_buf_del_extmark).was_not.called_with(nil, hl.hl_namespace, hl.hl_wc_ext_id)
 
-        hl.hl_wc_ext_id = constants.highlight.NO_WORD_COUNT_EXTMARK
+        hl.hl_wc_ext_id = consts.highlight.NO_WORD_COUNT_EXTMARK
         hl:clear_match_count(test_buf)
         assert.stub(vim.api.nvim_buf_del_extmark).was_not.called_with(nil, hl.hl_namespace, hl.hl_wc_ext_id)
 
@@ -232,7 +232,7 @@ describe('highlighter', function ()
         hl.hl_wc_ext_id = 12
         hl:clear_match_count(test_buf)
         assert.stub(vim.api.nvim_buf_del_extmark).was.called_with(test_buf, hl.hl_namespace, 12)
-        assert.equals(constants.highlight.NO_WORD_COUNT_EXTMARK, hl.hl_wc_ext_id)
+        assert.equals(consts.highlight.NO_WORD_COUNT_EXTMARK, hl.hl_wc_ext_id)
     end)
 
     it('properly updates match count virt text', function ()

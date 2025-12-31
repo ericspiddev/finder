@@ -1,4 +1,4 @@
-local constants = require("lib.consts")
+local consts = require("lib.consts")
 local highlighter = require("lib.highlighter")
 local keymaps = require("lib.keymaps")
 local events = require("lib.events")
@@ -13,14 +13,14 @@ finder_search_bar.MAX_WIDTH = 1
 function finder_search_bar:new(window_config, width_percent, should_enter)
     local current_editing_win = vim.api.nvim_get_current_win()
     local obj = {
-        query_buffer = constants.buffer.INVALID_BUFFER,
+        query_buffer = consts.buffer.INVALID_BUFFER,
         query_win_config = window_config,
         width_percent = width_percent,
         should_enter = should_enter or true,
         send_buffer = false, -- unused since we use lua cbs
-        highlighter = highlighter:new(current_editing_win, constants.highlight.MATCH_HIGHLIGHT, constants.highlight.CURR_MATCH_HIGHLIGHT),
+        highlighter = highlighter:new(current_editing_win, consts.highlight.MATCH_HIGHLIGHT, consts.highlight.CURR_MATCH_HIGHLIGHT),
         search_events = nil,
-        win_id = constants.window.INVALID_WINDOW_ID,
+        win_id = consts.window.INVALID_WINDOW_ID,
     }
     t = setmetatable(obj, self)
     keymap_mgr = keymaps:new(t)
@@ -65,7 +65,7 @@ end
 --- bar is open based on the current window id
 ---
 function finder_search_bar:is_open()
-    return self.win_id ~= constants.window.INVALID_WINDOW_ID
+    return self.win_id ~= consts.window.INVALID_WINDOW_ID
 end
 
 -------------------------------------------------------------
@@ -124,15 +124,15 @@ function finder_search_bar:open()
         local window = vim.api.nvim_get_current_win()
         self.search_window = window
         self.width_percent = self:cap_width(self.width_percent)
-        self.query_buffer = vim.api.nvim_create_buf(constants.buffer.LIST_BUFFER, constants.buffer.SCRATCH_BUFFER)
+        self.query_buffer = vim.api.nvim_create_buf(consts.buffer.LIST_BUFFER, consts.buffer.SCRATCH_BUFFER)
         self.query_win_config.width = math.floor(vim.api.nvim_win_get_width(window) * self.width_percent)
         self.query_win_config.col = vim.api.nvim_win_get_width(window)
         self.win_id = vim.api.nvim_open_win(self.query_buffer, self.should_enter, self.query_win_config)
-        if self.highlighter.hl_context == constants.buffer.NO_CONTEXT then
+        if self.highlighter.hl_context == consts.buffer.NO_CONTEXT then
             Finder_Logger:warning_print("No valid context found attempting to populate now")
             self.highlighter:update_hl_context(window, self.win_id)
         end
-        self.search_events = events:new(constants.buffer.VALID_LUA_EVENTS) -- make new events table with buffer events
+        self.search_events = events:new(consts.buffer.VALID_LUA_EVENTS) -- make new events table with buffer events
         self.search_events:add_event("on_lines", self, "on_lines_handler") -- add the on_lines_handler to search bar's
         self.search_events:attach_buffer_events(self.query_buffer)
         vim.cmd('startinsert') -- allow for typing right away
@@ -150,13 +150,13 @@ end
 function finder_search_bar:close()
     if self:is_open() then
         close_id = self.win_id
-        self.win_id = constants.window.INVALID_WINDOW_ID
+        self.win_id = consts.window.INVALID_WINDOW_ID
         Finder_Logger:debug_print("Closing open window")
 
         keymap_mgr:teardown_search_keymaps()
         vim.api.nvim_win_close(close_id, false)
         vim.api.nvim_buf_delete(self.query_buffer, {force = true}) -- buffer must be deleted after window otherwise window_close gives bad id
-        self.query_buffer = constants.window.INVALID_WINDOW_ID
+        self.query_buffer = consts.window.INVALID_WINDOW_ID
     else
         Finder_Logger:debug_print("Attempted to close a but now window was open ignoring...")
     end
@@ -167,7 +167,7 @@ end
 --- the match list
 ---
 function finder_search_bar:previous_match()
-    self:move_selected_match(constants.search.BACKWARD)
+    self:move_selected_match(consts.search.BACKWARD)
 end
 
 -------------------------------------------------------------
@@ -175,7 +175,7 @@ end
 --- match list
 ---
 function finder_search_bar:next_match()
-    self:move_selected_match(constants.search.FORWARD)
+    self:move_selected_match(consts.search.FORWARD)
 end
 
 -------------------------------------------------------------
@@ -200,8 +200,8 @@ end
 --- of the search bar buffer and window
 ---
 function finder_search_bar:clear_search()
-    vim.api.nvim_buf_set_lines(self.query_buffer, constants.lines.START, constants.lines.END,
-                              true, constants.buffer.EMPTY_BUFFER)
+    vim.api.nvim_buf_set_lines(self.query_buffer, consts.lines.START, consts.lines.END,
+                              true, consts.buffer.EMPTY_BUFFER)
 end
 
 return finder_search_bar

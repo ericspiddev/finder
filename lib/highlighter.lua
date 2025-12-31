@@ -1,18 +1,18 @@
 finder_highlighter = {}
 finder_highlighter.__index = finder_highlighter
-local constants = require("lib.consts")
+local consts = require("lib.consts")
 local match_obj = require("lib.match")
 
 function finder_highlighter:new(editor_window, result_hl_style, selected_hl_style )
     local obj = {
         hl_buf = vim.api.nvim_win_get_buf(editor_window),
         hl_win = editor_window,
-        hl_context = constants.buffer.NO_CONTEXT,
-        hl_namespace = vim.api.nvim_create_namespace(constants.highlight.FINDER_NAMESPACE),
+        hl_context = consts.buffer.NO_CONTEXT,
+        hl_namespace = vim.api.nvim_create_namespace(consts.highlight.FINDER_NAMESPACE),
         result_hl_style = result_hl_style,
         selected_hl_style = selected_hl_style,
         hl_fns = self:get_hl_fns(),
-        hl_wc_ext_id = constants.highlight.NO_WORD_COUNT_EXTMARK,
+        hl_wc_ext_id = consts.highlight.NO_WORD_COUNT_EXTMARK,
         ignore_case = true,
         matches = {},
         match_index = 1
@@ -82,8 +82,8 @@ end
 function finder_highlighter:populate_hl_context(buf_id)
     if not vim.api.nvim_buf_is_valid(buf_id) then
         Finder_Logger.warning_print("Attempting to populate context with invalid buffer id")
-        self.hl_context = constants.buffer.NO_CONTEXT
-        self.hl_buf = constants.buffer.INVALID_BUFFER
+        self.hl_context = consts.buffer.NO_CONTEXT
+        self.hl_buf = consts.buffer.INVALID_BUFFER
         return false
     end
     local total_lines = vim.api.nvim_buf_line_count(buf_id)
@@ -94,13 +94,13 @@ function finder_highlighter:populate_hl_context(buf_id)
         Finder_Logger:debug_print("Populating context with " .. total_lines .. " total lines")
 
         Finder_Logger:debug_print("Populating context with " .. total_lines .. " total lines")
-        self.hl_context = vim.api.nvim_buf_get_lines(buf_id, constants.lines.START, total_lines, false)
+        self.hl_context = vim.api.nvim_buf_get_lines(buf_id, consts.lines.START, total_lines, false)
         Finder_Logger:debug_print("HL context set too " .. vim.inspect(self.hl_context))
         return true
     else
         Finder_Logger:warning_print("No valid lines found to populate highlight context")
-        self.hl_context = constants.buffer.NO_CONTEXT
-        self.hl_buf = constants.buffer.INVALID_BUFFER
+        self.hl_context = consts.buffer.NO_CONTEXT
+        self.hl_buf = consts.buffer.INVALID_BUFFER
         return false
     end
 end
@@ -118,7 +118,7 @@ function finder_highlighter:highlight_file_by_pattern(win_buf, pattern)
         Finder_Logger:warning_print("Nil or empty pattern cancelling search")
         return
     end
-    if self.hl_context == constants.buffer.NO_CONTEXT then
+    if self.hl_context == consts.buffer.NO_CONTEXT then
         Finder_Logger:warning_print("No context to search through")
         return
     end
@@ -150,11 +150,11 @@ end
 --- @buffer: the buffer that the match count is present in (query buf)
 ---
 function finder_highlighter:clear_match_count(buffer)
-    if self.hl_wc_ext_id ~= constants.highlight.NO_WORD_COUNT_EXTMARK
+    if self.hl_wc_ext_id ~= consts.highlight.NO_WORD_COUNT_EXTMARK
     and buffer ~= nil
     and vim.api.nvim_buf_is_valid(buffer) then
         self.hl_fns.remove_highlight(buffer, self.hl_namespace, self.hl_wc_ext_id)
-        self.hl_wc_ext_id = constants.highlight.NO_WORD_COUNT_EXTMARK
+        self.hl_wc_ext_id = consts.highlight.NO_WORD_COUNT_EXTMARK
     end
 end
 
@@ -170,7 +170,7 @@ function finder_highlighter:update_match_count(buffer)
     if match ~= nil and match > -1
         and match_list ~= nil and #match_list > 0
         and match <= #match_list
-        and buffer ~= constants.buffer.INVALID_BUFFER then
+        and buffer ~= consts.buffer.INVALID_BUFFER then
        local virt_text_str = match .. "/" .. #match_list
        self.hl_wc_ext_id = self.hl_fns.highlight(buffer, self.hl_namespace, 0, -1, {
             virt_text = { { virt_text_str, "Comment" } },
@@ -206,7 +206,7 @@ function finder_highlighter:move_cursor(step)
         return
     end
 
-    if self.hl_win == constants.window.INVALID_WINDOW_ID then
+    if self.hl_win == consts.window.INVALID_WINDOW_ID then
         Finder_Logger:error_print("Invalid window id to move cursor through" )
         return
     end
@@ -228,7 +228,7 @@ function finder_highlighter:move_cursor(step)
     self.hl_fns.remove_highlight(self.hl_buf, self.hl_namespace, match.extmark_id)
     vim.api.nvim_win_set_cursor(self.hl_win, {match:get_cursor_row(), match.m_start})
     self:set_match_highlighting(match, self.selected_hl_style)
-    vim.cmd(constants.cmds.CENTER_SCREEN) -- center the screen on our cursor?
+    vim.cmd(consts.cmds.CENTER_SCREEN) -- center the screen on our cursor?
 end
 
 -------------------------------------------------------------
@@ -294,7 +294,7 @@ function finder_highlighter:dump_context()
         local buf = vim.api.nvim_win_get_buf(self.hl_win)
         if vim.api.nvim_buf_is_valid then
             local total_lines = vim.api.nvim_buf_line_count(buf)
-            for line_number, line in ipairs(vim.api.nvim_buf_get_lines(buf, constants.lines.START, total_lines, false)) do
+            for line_number, line in ipairs(vim.api.nvim_buf_get_lines(buf, consts.lines.START, total_lines, false)) do
                 vim.print("Line " .. line_number .. " :" .. line .. "total cols: " .. #line)
             end
         end

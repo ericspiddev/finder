@@ -1,6 +1,6 @@
 package.path = package.path .. ";/home/ericspidle/.config/nvim/lua/plugins/custom/finder/?.lua"
 local search_bar = require("lib.search_bar")
-local constants = require("lib.consts")
+local consts = require("lib.consts")
 local M = {}
 
 function M.setup(config)
@@ -21,7 +21,7 @@ function M.setup(config)
     Finder_Logger:debug_print("window: making a new window with config ", search_bar_config)
 
     M.search_bar = search_bar:new(search_bar_config, config.width_percentage, true)
-    M.search_bar.highlighter:populate_hl_context(constants.window.CURRENT_WINDOW)
+    M.search_bar.highlighter:populate_hl_context(consts.window.CURRENT_WINDOW)
     M.main()
 end
 
@@ -52,17 +52,17 @@ function M.update_finder_context(ev)
 end
 
 function M.main()
-    vim.api.nvim_create_autocmd({constants.events.WINDOW_RESIZED}, {
+    vim.api.nvim_create_autocmd({consts.events.WINDOW_RESIZED}, {
         callback = M.resize_finder_window
     })
-    vim.api.nvim_create_autocmd({constants.events.WINDOW_LEAVE_EVENT}, {
+    vim.api.nvim_create_autocmd({consts.events.WINDOW_LEAVE_EVENT}, {
         callback = function(ev)
             if ev.buf == M.search_bar.query_buffer then
                 M.search_bar.highlighter:clear_highlights(M.search_bar.highlighter.hl_buf)
             end
         end
     })
-    vim.api.nvim_create_autocmd({constants.events.BUFFER_ENTER}, {
+    vim.api.nvim_create_autocmd({consts.events.BUFFER_ENTER}, {
         callback = M.update_finder_context
     })
 
