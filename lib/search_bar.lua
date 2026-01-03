@@ -2,6 +2,7 @@ local consts = require("lib.consts")
 local highlighter = require("lib.highlighter")
 local keymaps = require("lib.keymaps")
 local events = require("lib.events")
+local history = require("lib.history_manager")
 keymap_mgr = nil -- global varaible used to init the keymappings for the search bar
 finder_search_bar = {}
 finder_search_bar.__index = finder_search_bar
@@ -20,6 +21,7 @@ function finder_search_bar:new(window_config, width_percent, should_enter)
         send_buffer = false, -- unused since we use lua cbs
         highlighter = highlighter:new(current_editing_win, consts.highlight.MATCH_HIGHLIGHT, consts.highlight.CURR_MATCH_HIGHLIGHT),
         search_events = nil,
+        history = history:new(consts.history.MAX_ENTRIES),
         win_id = consts.window.INVALID_WINDOW_ID,
     }
     t = setmetatable(obj, self)
@@ -137,6 +139,7 @@ function finder_search_bar:open()
         self.search_events:attach_buffer_events(self.query_buffer)
         vim.cmd('startinsert') -- allow for typing right away
         keymap_mgr:setup_search_keymaps()
+        keymap_mgr:setup_history_keymaps()
     else
         Finder_Logger:debug_print("Attempted to open an already open window ignoring...")
     end
@@ -154,6 +157,7 @@ function finder_search_bar:close()
         Finder_Logger:debug_print("Closing open window")
 
         keymap_mgr:teardown_search_keymaps()
+        keymap_mgr:teardown_history_keymaps()
         vim.api.nvim_win_close(close_id, false)
         vim.api.nvim_buf_delete(self.query_buffer, {force = true}) -- buffer must be deleted after window otherwise window_close gives bad id
         self.query_buffer = consts.window.INVALID_WINDOW_ID
@@ -167,6 +171,7 @@ end
 --- the match list
 ---
 function finder_search_bar:previous_match()
+    self.history:add_entry(self:get_window_contents())
     self:move_selected_match(consts.search.BACKWARD)
 end
 
@@ -175,7 +180,20 @@ end
 --- match list
 ---
 function finder_search_bar:next_match()
+    self.history:add_entry(self:get_window_contents())
     self:move_selected_match(consts.search.FORWARD)
+end
+
+function finder_search_bar:next_history_entry()
+    local entry = self.history:get_next_entry()
+    vim.api.nvim_buf_set_lines(self.query_buffer, consts.lines.START, consts.lines.END,
+                              true, {entry})
+end
+
+function finder_search_bar:previous_history_entry()
+    local entry = self.history:get_previous_entry()
+    vim.api.nvim_buf_set_lines(self.query_buffer, consts.lines.START, consts.lines.END,
+                              true, {entry})
 end
 
 -------------------------------------------------------------

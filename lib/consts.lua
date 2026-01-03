@@ -39,6 +39,9 @@
      cmds = {
         CENTER_SCREEN = "norm! zz"
      },
+     history = {
+        MAX_ENTRIES = 100,
+     }
  }
 
  return constants

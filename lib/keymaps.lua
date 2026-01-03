@@ -40,6 +40,24 @@ function finder_keymaps:setup_search_keymaps()
         nowait = true})
 end
 
+function finder_keymaps:setup_history_keymaps()
+    vim.keymap.set('n', '<UP>', function() self.search_bar:next_history_entry() end, {
+        buffer = self.search_bar.query_buffer,
+        nowait = true,
+        noremap = true})
+
+    vim.keymap.set('n', '<DOWN>', function() self.search_bar:previous_history_entry() end, {
+        buffer = self.search_bar.query_buffer,
+        nowait = true,
+        noremap = true})
+end
+
+
+function finder_keymaps:teardown_history_keymaps()
+    vim.keymap.del('n', '<UP>', {buffer = self.search_bar.query_buffer })
+    vim.keymap.del('n', '<DOWN>', {buffer = self.search_bar.query_buffer})
+end
+
 -------------------------------------------------------------
 --- keymaps.teardown_search_keymaps: this function handles
 --- deleting all of the keymaps that get setup for the search
