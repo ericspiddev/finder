@@ -172,7 +172,8 @@ end
 ---
 function finder_search_bar:previous_match()
     self.history:add_entry(self:get_window_contents())
-    self:move_selected_match(consts.search.BACKWARD)
+    local next_index = self.highlighter:get_closest_match(consts.search.BACKWARD)
+    self:move_selected_match(next_index)
 end
 
 -------------------------------------------------------------
@@ -180,8 +181,9 @@ end
 --- match list
 ---
 function finder_search_bar:next_match()
-    self.history:add_entry(self:get_window_contents())
-    self:move_selected_match(consts.search.FORWARD)
+    self.history:add_entry(self:get_window_contents()) -- add the entry
+    local next_index = self.highlighter:get_closest_match(consts.search.FORWARD)
+    self:move_selected_match(next_index)
 end
 
 function finder_search_bar:next_history_entry()
