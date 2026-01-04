@@ -310,38 +310,35 @@ describe('highlighter', function ()
             match_object:new(11, 2, 3, 12),
         }
 
-        hl:move_cursor(-1)
-        assert.equals(hl.match_index, #hl.matches)
-
         hl.match_index = 1
         assert.equals(hl.match_index, 1)
-        hl:move_cursor(0)
-        assert.equals(hl.match_index, 1)
-        hl:move_cursor(1)
+        hl:move_cursor(2)
         assert.equals(hl.match_index, 2)
         hl:move_cursor(3)
+        assert.equals(hl.match_index, 3)
+        hl:move_cursor(5)
         assert.equals(hl.match_index, 5)
         hl:move_cursor(3)
-        assert.equals(hl.match_index, 1)
-        hl:move_cursor(3)
-        assert.equals(hl.match_index, 4)
-        hl:move_cursor(-1)
         assert.equals(hl.match_index, 3)
-        hl:move_cursor(-2)
-        assert.equals(hl.match_index, 1)
-        hl:move_cursor(-4)
+        hl:move_cursor(3)
+        hl:move_cursor(4)
         assert.equals(hl.match_index, 4)
 
-        hl.match_index = 1
+        hl.match_index = 5 -- it does not update with invalid indices
         hl:move_cursor(-1)
-        assert.equals(hl.match_index, 7)
-        hl:move_cursor(-12)
-        assert.equals(hl.match_index, 2)
+        assert.equals(hl.match_index, 5)
 
+        hl:move_cursor(-20)
+        assert.equals(hl.match_index, 5)
 
-        hl.match_index = 7
-        hl:move_cursor(1)
-        assert.equals(hl.match_index, 1)
+        hl:move_cursor(8)
+        assert.equals(hl.match_index, 5)
+
+        hl:move_cursor(100)
+        assert.equals(hl.match_index, 5)
+
+        hl:move_cursor()
+        assert.equals(hl.match_index, 5)
 
         vim.cmd:revert()
         vim.api.nvim_buf_is_valid:revert()
@@ -349,7 +346,7 @@ describe('highlighter', function ()
 
     end)
 
-    it('moves the cursor and highlighting correctly', function ()
+    it('moves the cursor and highlighting correctly given the index', function ()
         local window_id = 0
         local result_style = "matched_style"
         local selected_style = "selected_style"
@@ -363,45 +360,34 @@ describe('highlighter', function ()
             match_object:new(11, 2, 3, 12),
          }
         -- move forward
-        hl:move_cursor(1)
+        hl:move_cursor(2)
         local prev_match = hl.matches[1] -- starts at 1
         local curr_match = hl.matches[2]
         move_cursor_asserts(hl, prev_match, curr_match, result_style, selected_style )
 
         --move backward
-        hl:move_cursor(-1)
+        hl:move_cursor(1)
         prev_match = hl.matches[2]
         curr_match = hl.matches[1]
         move_cursor_asserts(hl, prev_match, curr_match, result_style, selected_style )
 
         --move multiple spots forward
-        hl:move_cursor(2)
+        hl:move_cursor(3)
         prev_match = hl.matches[1]
         curr_match = hl.matches[3]
         move_cursor_asserts(hl, prev_match, curr_match, result_style, selected_style )
 
         --move multiple spots backward
-        hl:move_cursor(-2)
+        hl:move_cursor(1)
         prev_match = hl.matches[3]
         curr_match = hl.matches[1]
         move_cursor_asserts(hl, prev_match, curr_match, result_style, selected_style)
 
-        -- can loop back to itself spots forward
-        hl:move_cursor(3)
-        prev_match = hl.matches[1]
-        curr_match = hl.matches[1]
-        move_cursor_asserts(hl, prev_match, curr_match, result_style, selected_style )
 
-        -- can loop back to itself spots backward
-        hl:move_cursor(-3)
-        prev_match = hl.matches[1]
-        curr_match = hl.matches[1]
-        move_cursor_asserts(hl, prev_match, curr_match, result_style, selected_style )
+        hl.set_match_highlighting:revert()
+        vim.api.nvim_win_set_cursor:revert()
 
-        hl:move_cursor(-5)
-        prev_match = hl.matches[1]
-        curr_match = hl.matches[2]
-        move_cursor_asserts(hl, prev_match, curr_match, result_style, selected_style )
+    end)
 
         hl:move_cursor(7)
         prev_match = hl.matches[2]

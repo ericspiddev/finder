@@ -203,9 +203,9 @@ end
 --- @direction: which way to go when iterating ove the list
 --- (FORWARD OR BACKWARD)
 ---
-function finder_search_bar:move_selected_match(direction)
+function finder_search_bar:move_selected_match(index)
     if self.highlighter.matches ~= nil and #self.highlighter.matches > 0 then
-        self.highlighter:move_cursor(direction)
+        self.highlighter:move_cursor(index)
         self.highlighter:clear_match_count(self.query_buffer)
         self.highlighter:update_match_count(self.query_buffer)
     else

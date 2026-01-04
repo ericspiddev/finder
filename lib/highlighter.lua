@@ -201,8 +201,13 @@ end
 --- search result to be highlighted differently to show it's selected
 --- @direction: which way to iterate through matches (forward or backward)
 ---
-function finder_highlighter:move_cursor(step)
-    if step == 0 then
+function finder_highlighter:move_cursor(index)
+    if not index then
+        Finder_Logger:error_print("Nil index!")
+        return
+    end
+    if index <= 0 or index > #self.matches then
+        Finder_Logger:error_print("Invalid index: ", index)
         return
     end
 
@@ -219,10 +224,8 @@ function finder_highlighter:move_cursor(step)
     end
 
     self:set_match_highlighting(self.matches[self.match_index], self.result_hl_style)
-    self.match_index = ((self.match_index + step) % (#self.matches)) -- shift up from 1 - #matches (stupid lua indexing)
-    if self.match_index == 0 then
-        self.match_index = #self.matches
-    end
+    self.match_index = index
+
     local match = self.matches[self.match_index]
 
     self.hl_fns.remove_highlight(self.hl_buf, self.hl_namespace, match.extmark_id)
