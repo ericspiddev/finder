@@ -269,6 +269,57 @@ function finder_highlighter:get_buffer_current_hls(buffer)
     return ids
 end
 
+function finder_highlighter:get_closest_match(search_direction)
+    if #self.matches == 0 then
+        return nil
+    end
+
+    local cursor_pos = vim.api.nvim_win_get_cursor(self.hl_win)
+    local line = cursor_pos[1]
+    local w_start = cursor_pos[2]
+    local index
+    local curr_match
+
+    if search_direction == consts.search.FORWARD then
+        if self.matches[#self.matches].row == line and self.matches[#self.matches].m_start == w_start then
+            return 1
+        end
+        index = 1
+        curr_match = self.matches[index]
+        while(curr_match.row < line and index < #self.matches) do
+            index = index + 1
+            curr_match = self.matches[index]
+        end
+
+        while(curr_match.row == line
+            and curr_match.m_start <= w_start
+            and index < #self.matches) do
+                index = index + 1
+                curr_match = self.matches[index]
+        end
+    elseif search_direction == consts.search.BACKWARD then
+        if self.matches[1].row == line and self.matches[1].m_start == w_start then
+            return #self.matches
+        end
+
+        index = #self.matches
+        curr_match = self.matches[index]
+        while(curr_match.row > line and index > 1) do
+            index = index - 1
+            curr_match = self.matches[index]
+        end
+
+        while(curr_match.row == line
+            and curr_match.m_start >= w_start
+            and index > 1) do
+                index = index - 1
+                curr_match = self.matches[index]
+        end
+    end
+
+    return index
+end
+
 -------------------------------------------------------------
 --- highlighter.clear_highlights: clears all of the currently
 --- highlighted text in a buffer. Also clears the match_count

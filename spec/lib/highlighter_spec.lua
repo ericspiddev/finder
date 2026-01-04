@@ -389,14 +389,176 @@ describe('highlighter', function ()
 
     end)
 
-        hl:move_cursor(7)
-        prev_match = hl.matches[2]
-        curr_match = hl.matches[3]
-        move_cursor_asserts(hl, prev_match, curr_match, result_style, selected_style )
+    it('can find the closest match index going forward', function ()
+        local hl = create_new_highlighter()
 
-        hl.set_match_highlighting:revert()
-        vim.api.nvim_win_set_cursor:revert()
+        assert.equals(hl:get_closest_match(consts.search.FORWARD), nil)
+        hl.matches = {
+            match_object:new(0, 1, 2, 3), -- line, start, end, extmark_id
+            match_object:new(4, 5, 6, 7),
+            match_object:new(7, 5, 6, 7),
+            match_object:new(11, 2, 5, 12),
+            match_object:new(11, 8, 14, 12),
+            match_object:new(11, 17, 25, 12),
+            match_object:new(11, 28, 35, 12),
+            match_object:new(12, 2, 3, 12),
+            match_object:new(13, 2, 3, 12),
+        }
 
+        -- moves forward when cycling
+        stub(vim.api, 'nvim_win_get_cursor').returns({5, 12})
+        assert.equals(hl:get_closest_match(consts.search.FORWARD), 3)
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({7, 5})
+        assert.equals(hl:get_closest_match(consts.search.FORWARD), 4)
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({11, 2})
+        assert.equals(hl:get_closest_match(consts.search.FORWARD), 5)
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({11, 8})
+        assert.equals(hl:get_closest_match(consts.search.FORWARD), 6)
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({11, 17})
+        assert.equals(hl:get_closest_match(consts.search.FORWARD), 7)
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({11, 28})
+        assert.equals(hl:get_closest_match(consts.search.FORWARD), 8)
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({12, 2})
+        assert.equals(hl:get_closest_match(consts.search.FORWARD), 9)
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({13, 2})
+        assert.equals(hl:get_closest_match(consts.search.FORWARD), 1)
+
+        -- anything past the last index should return last index (perhaps change to go to 1?)
+        stub(vim.api, 'nvim_win_get_cursor').returns({15, 18})
+        assert.equals(hl:get_closest_match(consts.search.FORWARD), 9)
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({150, 90})
+        assert.equals(hl:get_closest_match(consts.search.FORWARD), 9)
+
+        -- cursor on the same line
+        stub(vim.api, 'nvim_win_get_cursor').returns({11, 7})
+        assert.equals(hl:get_closest_match(consts.search.FORWARD), 5)
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({11, 8})
+        assert.equals(hl:get_closest_match(consts.search.FORWARD), 6)
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({11, 16})
+        assert.equals(hl:get_closest_match(consts.search.FORWARD), 6)
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({11, 18})
+        assert.equals(hl:get_closest_match(consts.search.FORWARD), 7)
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({11, 27})
+        assert.equals(hl:get_closest_match(consts.search.FORWARD), 7)
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({11, 29})
+        assert.equals(hl:get_closest_match(consts.search.FORWARD), 8)
+
+    end)
+
+    it('can find the closest match index going backward', function ()
+        local hl = create_new_highlighter()
+
+        assert.equals(hl:get_closest_match(consts.search.BACKWARD), nil)
+        hl.matches = {
+            match_object:new(3, 1, 2, 3), -- line, start, end, extmark_id
+            match_object:new(4, 5, 6, 7), --2
+            match_object:new(7, 5, 6, 7), -- 3
+            match_object:new(11, 2, 5, 12), -- 4
+            match_object:new(11, 8, 14, 12), -- 5
+            match_object:new(11, 17, 25, 12), -- 6
+            match_object:new(11, 28, 35, 12), --7
+            match_object:new(12, 2, 3, 12), -- 8
+            match_object:new(13, 2, 3, 12), -- 9
+        }
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({11, 29})
+        assert.equals(hl:get_closest_match(consts.search.BACKWARD), 7)
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({11, 28})
+        assert.equals(hl:get_closest_match(consts.search.BACKWARD), 6)
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({11, 17})
+        assert.equals(hl:get_closest_match(consts.search.BACKWARD), 5)
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({11, 8})
+        assert.equals(hl:get_closest_match(consts.search.BACKWARD), 4)
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({11, 2})
+        assert.equals(hl:get_closest_match(consts.search.BACKWARD), 3)
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({7, 5})
+        assert.equals(hl:get_closest_match(consts.search.BACKWARD), 2)
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({4, 5})
+        assert.equals(hl:get_closest_match(consts.search.BACKWARD), 1)
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({3, 1})
+        assert.equals(hl:get_closest_match(consts.search.BACKWARD), 9)
+
+        -- anything before the first match goes to first match (maybe switch this to go to last?)
+        stub(vim.api, 'nvim_win_get_cursor').returns({2, 10})
+        assert.equals(hl:get_closest_match(consts.search.BACKWARD), 1)
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({2, 12})
+        assert.equals(hl:get_closest_match(consts.search.BACKWARD), 1)
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({1, 8})
+        assert.equals(hl:get_closest_match(consts.search.BACKWARD), 1)
+
+        -- cursor on the same line
+        stub(vim.api, 'nvim_win_get_cursor').returns({11, 1})
+        assert.equals(hl:get_closest_match(consts.search.BACKWARD), 3)
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({11, 3})
+        assert.equals(hl:get_closest_match(consts.search.BACKWARD), 4)
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({11, 7})
+        assert.equals(hl:get_closest_match(consts.search.BACKWARD), 4)
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({11, 9})
+        assert.equals(hl:get_closest_match(consts.search.BACKWARD), 5)
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({11, 16})
+        assert.equals(hl:get_closest_match(consts.search.BACKWARD), 5)
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({11, 18})
+        assert.equals(hl:get_closest_match(consts.search.BACKWARD), 6)
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({11, 27})
+        assert.equals(hl:get_closest_match(consts.search.BACKWARD), 6)
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({11, 29})
+        assert.equals(hl:get_closest_match(consts.search.BACKWARD), 7)
+    end)
+
+    it('wraps around matches array when finding closest match', function ()
+        local hl = create_new_highlighter()
+
+        hl.matches = {
+            match_object:new(3, 1, 2, 3), -- line, start, end, extmark_id
+            match_object:new(4, 5, 6, 7), --2
+            match_object:new(7, 5, 6, 7), -- 3
+            match_object:new(11, 2, 5, 12), -- 4
+        }
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({2, 2})
+        assert.equals(hl:get_closest_match(consts.search.BACKWARD), 1)
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({3, 1})
+        assert.equals(hl:get_closest_match(consts.search.BACKWARD), 4)
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({11, 2})
+        assert.equals(hl:get_closest_match(consts.search.FORWARD), 1)
+
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({12, 3})
+        assert.equals(hl:get_closest_match(consts.search.FORWARD), 4)
+
+        stub(vim.api, 'nvim_win_get_cursor').returns({11, 2})
+        assert.equals(hl:get_closest_match(consts.search.FORWARD), 1)
     end)
 
     it('adds new matches to the highlighter match table', function()
