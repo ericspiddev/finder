@@ -389,6 +389,28 @@ describe('highlighter', function ()
 
     end)
 
+    it('ignores invalid indices in move cursor', function ()
+        local hl = create_new_highlighter()
+        assert.equals(hl:move_cursor(), nil)
+        assert.equals(hl:move_cursor(1), nil)
+        assert.equals(hl:move_cursor(-10), nil)
+        assert.equals(hl:move_cursor(0), nil)
+
+        hl.matches = {
+            match_object:new(0, 1, 2, 3), -- line, start, end, extmark_id
+            match_object:new(4, 5, 6, 7),
+            match_object:new(11, 2, 3, 12),
+        }
+
+        assert.equals(hl:move_cursor(4), nil)
+        assert.equals(hl:move_cursor(5), nil)
+        assert.equals(hl:move_cursor(10), nil)
+
+        hl.hl_win = consts.window.INVALID_WINDOW_ID
+        assert.equals(hl:move_cursor(1), nil)
+        assert.equals(hl:move_cursor(2), nil)
+        assert.equals(hl:move_cursor(3), nil)
+    end)
     it('can find the closest match index going forward', function ()
         local hl = create_new_highlighter()
 
