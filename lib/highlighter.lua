@@ -231,7 +231,7 @@ function finder_highlighter:move_cursor(index)
     self.hl_fns.remove_highlight(self.hl_buf, self.hl_namespace, match.extmark_id)
     vim.api.nvim_win_set_cursor(self.hl_win, {match:get_cursor_row(), match.m_start})
     self:set_match_highlighting(match, self.selected_hl_style)
-    vim.cmd(consts.cmds.CENTER_SCREEN) -- center the screen on our cursor?
+    vim.api.nvim_buf_call(self.hl_buf, function () vim.cmd(consts.cmds.CENTER_SCREEN) end)
     return true
 end
 
