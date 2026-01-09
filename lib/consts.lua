@@ -41,6 +41,10 @@
      },
      history = {
         MAX_ENTRIES = 100,
+     },
+     modes = {
+         case_sensitive = "CASE_SENSITIVE",
+         regex = "REGEX",
      }
  }
 
