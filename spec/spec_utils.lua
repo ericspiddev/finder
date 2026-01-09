@@ -1,6 +1,8 @@
 local debug = require('lib.finder_debug')
 local mock = require('luassert.mock')
 local match = require('luassert.match')
+local consts = require('lib.consts')
+local search_mode = require('lib.search_mode')
 spec_utils = {}
 
 spec_utils.__index = spec_utils
@@ -90,6 +92,13 @@ function spec_utils:revert_debug_prints()
         mock_debug.error_print:revert()
         mock_debug = nil
     end
+end
+
+function spec_utils:get_supported_modes(namespace_id)
+    local search_modes = {}
+    search_modes[consts.modes.regex] = search_mode:new("Regex", "R", namespace_id, consts.modes.regex_color)
+    search_modes[consts.modes.case_sensitive] = search_mode:new("Match Case", "C", namespace_id, consts.modes.case_sensitive_color)
+    return search_modes
 end
 
 return spec_utils

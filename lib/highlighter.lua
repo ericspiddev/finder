@@ -3,19 +3,19 @@ finder_highlighter.__index = finder_highlighter
 local consts = require("lib.consts")
 local match_obj = require("lib.match")
 
-function finder_highlighter:new(editor_window, result_hl_style, selected_hl_style )
+function finder_highlighter:new(editor_window, result_hl_style, selected_hl_style, hl_namespace, mode_mgr)
     local obj = {
         hl_buf = vim.api.nvim_win_get_buf(editor_window),
         hl_win = editor_window,
         hl_context = consts.buffer.NO_CONTEXT,
-        hl_namespace = vim.api.nvim_create_namespace(consts.highlight.FINDER_NAMESPACE),
+        hl_namespace = hl_namespace,
         result_hl_style = result_hl_style,
         selected_hl_style = selected_hl_style,
         hl_fns = self:get_hl_fns(),
         hl_wc_ext_id = consts.highlight.NO_WORD_COUNT_EXTMARK,
-        ignore_case = true,
         matches = {},
-        match_index = 1
+        match_index = 1,
+        mode_mgr = mode_mgr
     }
     return setmetatable(obj, self)
 end
@@ -36,26 +36,6 @@ function finder_highlighter:get_hl_fns()
         remove_highlight = vim.api.nvim_buf_del_extmark
     }
     return fns
-end
-
--------------------------------------------------------------
---- highlight.toggle_ignore_case: this tells the highlighter
---- wether or it should ignore the case of the current search
---- pattern. It also adds a 'C' to the query buffer if the
---- query is matching case
---- @query_buffer: search bar buffer that we add the 'C' too
----
-function finder_highlighter:toggle_ignore_case(query_buffer)
-    self.ignore_case = not self.ignore_case
-    if not self.ignore_case then
-    self.comment_marker = self.hl_fns.highlight(query_buffer, self.hl_namespace, 0, -1, {
-            virt_text = { { "C", "ModeMsg" } },
-            virt_text_pos = "right_align",
-        })
-    else
-        self.hl_fns.remove_highlight(query_buffer, self.hl_namespace, self.comment_marker)
-    end
-
 end
 
 -------------------------------------------------------------
@@ -123,19 +103,18 @@ function finder_highlighter:highlight_file_by_pattern(win_buf, pattern)
         return
     end
 
+    local exact_match = self.mode_mgr:apply_regex_mode()
+
     for line_number, line in ipairs(self.hl_context) do
         local search_index = 1
-        if self.ignore_case then
-            line = string.lower(line)
-            pattern = string.lower(pattern)
-        end
+        line, pattern = self.mode_mgr:apply_modes_to_search_text(line, pattern)
 
-        local pattern_start, pattern_end = string.find(line, pattern) -- find the pattern here...
+        local pattern_start, pattern_end = string.find(line, pattern, 1, exact_match) -- find the pattern here...
         while pattern_start ~= nil do
             -- highlight with start index and end index
             self:highlight_pattern_in_line(line_number - 1, pattern_start - 1, pattern_end)
             search_index = pattern_end + 1
-            pattern_start, pattern_end = string.find(line, pattern, search_index)
+            pattern_start, pattern_end = string.find(line, pattern, search_index, exact_match) -- hmmm
         end
     end
     if #self.matches > 0 then

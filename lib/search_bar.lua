@@ -3,6 +3,9 @@ local highlighter = require("lib.highlighter")
 local keymaps = require("lib.keymaps")
 local events = require("lib.events")
 local history = require("lib.history_manager")
+local mode_manager = require("lib.mode_manager")
+local search_mode = require("lib.search_mode")
+
 keymap_mgr = nil -- global varaible used to init the keymappings for the search bar
 finder_search_bar = {}
 finder_search_bar.__index = finder_search_bar
@@ -13,13 +16,16 @@ finder_search_bar.MAX_WIDTH = 1
 
 function finder_search_bar:new(window_config, width_percent, should_enter)
     local current_editing_win = vim.api.nvim_get_current_win()
+    local namespace = vim.api.nvim_create_namespace(consts.highlight.FINDER_NAMESPACE)
+    local mode_mgr = mode_manager:new(create_search_bar_modes(namespace))
     local obj = {
         query_buffer = consts.buffer.INVALID_BUFFER,
         query_win_config = window_config,
         width_percent = width_percent,
         should_enter = should_enter or true,
         send_buffer = false, -- unused since we use lua cbs
-        highlighter = highlighter:new(current_editing_win, consts.highlight.MATCH_HIGHLIGHT, consts.highlight.CURR_MATCH_HIGHLIGHT),
+        mode_manager = mode_mgr,
+        highlighter = highlighter:new(current_editing_win, consts.highlight.MATCH_HIGHLIGHT, consts.highlight.CURR_MATCH_HIGHLIGHT, namespace, mode_mgr),
         search_events = nil,
         history = history:new(consts.history.MAX_ENTRIES),
         win_id = consts.window.INVALID_WINDOW_ID,
@@ -29,12 +35,11 @@ function finder_search_bar:new(window_config, width_percent, should_enter)
     return t
 end
 
--------------------------------------------------------------
---- search_bar.toggle_case_sensitivity: toggle whether or not
---- searching should match case (calls into highlighter)
----
-function finder_search_bar:toggle_case_sensitivity()
-    self.highlighter:toggle_ignore_case(self.query_buffer)
+function create_search_bar_modes(namespace_id)
+    local search_modes = {}
+    search_modes[consts.modes.regex] = search_mode:new("Regex", "R", namespace_id, consts.modes.regex_color)
+    search_modes[consts.modes.case_sensitive] = search_mode:new("Match Case", "C", namespace_id, consts.modes.case_sensitive_color)
+    return search_modes
 end
 
 -------------------------------------------------------------
@@ -130,6 +135,8 @@ function finder_search_bar:open()
         self.query_win_config.width = math.floor(vim.api.nvim_win_get_width(window) * self.width_percent)
         self.query_win_config.col = vim.api.nvim_win_get_width(window)
         self.win_id = vim.api.nvim_open_win(self.query_buffer, self.should_enter, self.query_win_config)
+
+        self.mode_manager:update_relative_window(self.win_id)
         if self.highlighter.hl_context == consts.buffer.NO_CONTEXT then
             Finder_Logger:warning_print("No valid context found attempting to populate now")
             self.highlighter:update_hl_context(window, self.win_id)
@@ -138,8 +145,7 @@ function finder_search_bar:open()
         self.search_events:add_event("on_lines", self, "on_lines_handler") -- add the on_lines_handler to search bar's
         self.search_events:attach_buffer_events(self.query_buffer)
         vim.cmd('startinsert') -- allow for typing right away
-        keymap_mgr:setup_search_keymaps()
-        keymap_mgr:setup_history_keymaps()
+        keymap_mgr:setup_finder_keymaps()
     else
         Finder_Logger:debug_print("Attempted to open an already open window ignoring...")
     end
@@ -158,9 +164,11 @@ function finder_search_bar:close()
 
         keymap_mgr:teardown_search_keymaps()
         keymap_mgr:teardown_history_keymaps()
+
+        self.mode_manager:close_all_modes()
         vim.api.nvim_win_close(close_id, false)
         vim.api.nvim_buf_delete(self.query_buffer, {force = true}) -- buffer must be deleted after window otherwise window_close gives bad id
-        self.query_buffer = consts.window.INVALID_WINDOW_ID
+        self.query_buffer = consts.buffer.INVALID_BUFFER
     else
         Finder_Logger:debug_print("Attempted to close a but now window was open ignoring...")
     end

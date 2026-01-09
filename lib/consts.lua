@@ -41,6 +41,14 @@
      },
      history = {
         MAX_ENTRIES = 100,
+     },
+     modes = {
+         case_sensitive = "CASE_SENSITIVE",
+         regex = "REGEX",
+         banner_gap = 2,
+         case_sensitive_color = "#9EA1D4",
+         regex_color = "#FD8A8A",
+         padding_space = 2,
      }
  }
 

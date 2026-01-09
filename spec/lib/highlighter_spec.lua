@@ -2,6 +2,8 @@ local highlight = require('lib.highlighter')
 local stub = require('luassert.stub')
 local utils = require('spec.spec_utils')
 local consts = require('lib.consts')
+local mode_manager = require('lib.mode_manager')
+local search_mode = require('lib.search_mode')
 local match_object = require('lib.match')
 local assert_match = require('luassert.match')
 utils:register_global_logger()
@@ -23,29 +25,32 @@ function revert_highlights()
     vim.api.nvim_buf_del_extmark:revert()
 end
 
-function string_to_matches(line, pattern, row, ignore_case)
+function string_to_matches(line, pattern, row, ignore_case, regex)
     matches = {}
     if ignore_case then
         line = string.lower(line)
         pattern = string.lower(pattern)
     end
 
-    local pattern_start, pattern_end = string.find(line, pattern) -- find the pattern here...
+    local pattern_start, pattern_end = string.find(line, pattern, 1, not regex) -- find the pattern here...
     while pattern_start ~= nil do
             -- highlight with start index and end index
             table.insert(matches, match_object:new(row, pattern_start - 1, pattern_end, 0)) -- don't care about extmark_id
             search_index = pattern_end + 1
-            pattern_start, pattern_end = string.find(line, pattern, search_index)
+            pattern_start, pattern_end = string.find(line, pattern, search_index, not regex)
         end
 
     return matches
 end
 
-function create_new_highlighter(window_id, result_style, selected_style)
+function create_new_highlighter(window_id, result_style, selected_style, ns_id, mode_mgr)
     window_id = window_id or 0
     result_style = result_style or "matched_style"
     selected_style = selected_style or "selected_style"
-    return highlight:new(window_id, result_style, selected_style)
+    ns_id = ns_id or 0
+    mode_mgr = mode_mgr or mode_manager:new(utils:get_supported_modes(ns_id))
+
+    return highlight:new(window_id, result_style, selected_style, ns_id, mode_mgr)
 end
 
 function move_cursor_asserts(hl, prev_match, curr_match, result_style, selected_style)
@@ -649,25 +654,25 @@ describe('highlighter', function ()
         local pattern = "ERIC"
         local cmp_match = nil
         hl:highlight_file_by_pattern(0, pattern)
+        hl.mode_mgr.modes[consts.modes.case_sensitive].active = false
         assert.equals(4, #hl.matches)
 
-        cmp_match = string_to_matches(hl.hl_context[check_index], pattern, check_index, hl.ignore_case)[1]
+        cmp_match = string_to_matches(hl.hl_context[check_index], pattern, check_index, true)[1]
         assert(utils:compare_matches(hl.matches[check_index], cmp_match))
 
-
         check_index = 2
-        cmp_match = string_to_matches(hl.hl_context[check_index], pattern, check_index, hl.ignore_case)[1]
+        cmp_match = string_to_matches(hl.hl_context[check_index], pattern, check_index, true)[1]
         assert(utils:compare_matches(hl.matches[check_index], cmp_match))
 
         check_index = 3
-        cmp_match = string_to_matches(hl.hl_context[check_index], pattern, check_index, hl.ignore_case)[1]
+        cmp_match = string_to_matches(hl.hl_context[check_index], pattern, check_index, true)[1]
         assert(utils:compare_matches(hl.matches[check_index], cmp_match))
 
         check_index = 4
-        cmp_match = string_to_matches(hl.hl_context[check_index], pattern, check_index, hl.ignore_case)[1]
+        cmp_match = string_to_matches(hl.hl_context[check_index], pattern, check_index, true)[1]
         assert(utils:compare_matches(hl.matches[check_index], cmp_match))
 
-        hl.ignore_case = false
+        hl.mode_mgr.modes[consts.modes.case_sensitive].active = true
         pattern = "eric"
         hl.matches = {}
         hl:highlight_file_by_pattern(0, pattern)
@@ -675,9 +680,38 @@ describe('highlighter', function ()
         check_index = 1
         local match_line = 3
 
-        cmp_match = string_to_matches(hl.hl_context[match_line], pattern, match_line, hl.ignore_case)[1]
+        cmp_match = string_to_matches(hl.hl_context[match_line], pattern, match_line)[1]
         assert(utils:compare_matches(hl.matches[check_index], cmp_match))
 
+    end)
+
+    it('properly searches using regexes when enabled', function ()
+        local hl = create_new_highlighter()
+
+        hl.hl_context = {
+            "Test string one who knows what this will be",
+            "another string to test against I wonder",
+            "what exactly is it that we're looking",
+            "for it could be anything really",
+        }
+
+        local check_index = 1
+        local pattern = "string.*"
+        local cmp_match = nil
+        hl.mode_mgr.modes[consts.modes.regex].active = false
+        hl:highlight_file_by_pattern(0, pattern)
+        assert.equals(0, #hl.matches)
+
+
+        hl.mode_mgr.modes[consts.modes.regex].active = true
+        hl:highlight_file_by_pattern(0, pattern)
+        assert.equals(2, #hl.matches)
+        cmp_match = string_to_matches(hl.hl_context[check_index], pattern, check_index, true, true)[1]
+        assert(utils:compare_matches(hl.matches[check_index], cmp_match))
+
+        check_index = 2
+        cmp_match = string_to_matches(hl.hl_context[check_index], pattern, check_index, true, true)[1]
+        assert(utils:compare_matches(hl.matches[check_index], cmp_match))
     end)
 
     it('can handle multiple pattern matches in the same line', function ()
@@ -695,7 +729,7 @@ describe('highlighter', function ()
 
         hl:highlight_file_by_pattern(0, pattern)
         assert.equals(#hl.matches, 7)
-        local cmp_matches = string_to_matches(hl.hl_context[row], pattern, row, hl.ignore_case)
+        local cmp_matches = string_to_matches(hl.hl_context[row], pattern, row)
 
         assert(utils:compare_matches(hl.matches[check_index], cmp_matches[check_index]))
 
@@ -711,7 +745,7 @@ describe('highlighter', function ()
         assert.equals(string.sub(hl.hl_context[row], cmp_matches[check_index].m_start + 1, cmp_matches[check_index].m_end), pattern)
 
         row = 2
-        cmp_matches = string_to_matches(hl.hl_context[row], pattern, row, hl.ignore_case)
+        cmp_matches = string_to_matches(hl.hl_context[row], pattern, row)
 
         check_index = 1
         assert(utils:compare_matches(hl.matches[4], cmp_matches[check_index]))
