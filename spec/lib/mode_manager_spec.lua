@@ -47,7 +47,7 @@ function revert_nvim_api_for_banners()
     vim.api.nvim_buf_delete:revert()
 end
 
-local REGEX_MODE = consts.modes.regex
+local REGEX_MODE = consts.modes.lua_pattern
 local MATCH_CASE_MODE = consts.modes.case_sensitive
 describe('Mode manager', function ()
 

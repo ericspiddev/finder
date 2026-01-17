@@ -44,10 +44,10 @@
      },
      modes = {
          case_sensitive = "CASE_SENSITIVE",
-         regex = "REGEX",
+         lua_pattern = "PATTERN",
          banner_gap = 2,
-         case_sensitive_color = "#9EA1D4",
-         regex_color = "#FD8A8A",
+         case_sensitive_color = "#F18A85",
+         pattern_color = "#007FFF",
          padding_space = 2,
      }
  }

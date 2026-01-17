@@ -37,7 +37,7 @@ end
 
 function create_search_bar_modes(namespace_id)
     local search_modes = {}
-    search_modes[consts.modes.regex] = search_mode:new("Regex", "R", namespace_id, consts.modes.regex_color)
+    search_modes[consts.modes.lua_pattern] = search_mode:new("Lua Pattern", "P", namespace_id, consts.modes.pattern_color)
     search_modes[consts.modes.case_sensitive] = search_mode:new("Match Case", "C", namespace_id, consts.modes.case_sensitive_color)
     return search_modes
 end

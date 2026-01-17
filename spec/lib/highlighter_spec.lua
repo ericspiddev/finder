@@ -37,6 +37,7 @@ function string_to_matches(line, pattern, row, ignore_case, regex)
             -- highlight with start index and end index
             table.insert(matches, match_object:new(row, pattern_start - 1, pattern_end, 0)) -- don't care about extmark_id
             search_index = pattern_end + 1
+
             pattern_start, pattern_end = string.find(line, pattern, search_index, not regex)
         end
 
@@ -698,12 +699,12 @@ describe('highlighter', function ()
         local check_index = 1
         local pattern = "string.*"
         local cmp_match = nil
-        hl.mode_mgr.modes[consts.modes.regex].active = false
+        hl.mode_mgr.modes[consts.modes.lua_pattern].active = false
         hl:highlight_file_by_pattern(0, pattern)
         assert.equals(0, #hl.matches)
 
 
-        hl.mode_mgr.modes[consts.modes.regex].active = true
+        hl.mode_mgr.modes[consts.modes.lua_pattern].active = true
         hl:highlight_file_by_pattern(0, pattern)
         assert.equals(2, #hl.matches)
         cmp_match = string_to_matches(hl.hl_context[check_index], pattern, check_index, true, true)[1]

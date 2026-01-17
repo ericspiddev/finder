@@ -58,7 +58,7 @@ function finder_keymaps:setup_mode_keymaps()
         buffer = self.search_bar.query_buffer,
         nowait = true,
         noremap = true})
-    vim.keymap.set('n', '<leader>r', function() self.search_bar.mode_manager:toggle_mode(consts.modes.regex) end, {
+    vim.keymap.set('n', '<leader>r', function() self.search_bar.mode_manager:toggle_mode(consts.modes.lua_pattern) end, {
         buffer = self.search_bar.query_buffer,
         nowait = true,
         noremap = true})
