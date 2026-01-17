@@ -2,6 +2,7 @@ finder_highlighter = {}
 finder_highlighter.__index = finder_highlighter
 local consts = require("lib.consts")
 local match_obj = require("lib.match")
+local pattern_handler = require("lib.pattern_handler"):new(consts.modes.escape_chars)
 
 function finder_highlighter:new(editor_window, result_hl_style, selected_hl_style, hl_namespace, mode_mgr)
     local obj = {
@@ -104,28 +105,39 @@ function finder_highlighter:highlight_file_by_pattern(win_buf, pattern)
     end
 
     local exact_match = self.mode_mgr:apply_regex_mode()
+    local pattern_match = not exact_match
 
+    if pattern_match then
+        if pattern_handler:wait_to_search(pattern) then
+            return
+        end
+        pattern = pattern_handler:escape_pattern_characters(pattern)
+    end
+
+    local match_count = 0
     for line_number, line in ipairs(self.hl_context) do
         local search_index = 1
         line, pattern = self.mode_mgr:apply_modes_to_search_text(line, pattern)
 
-        local count = 0
         local pattern_start, pattern_end = string.find(line, pattern, 1, exact_match) -- find the pattern here...
-         while pattern_start ~= nil and count < consts.search.max_results do
+         while pattern_start ~= nil and match_count < consts.search.max_results do
              -- highlight with start index and end index
             self:highlight_pattern_in_line(line_number - 1, pattern_start - 1, pattern_end)
             search_index = pattern_end + 1
             pattern_start, pattern_end = string.find(line, pattern, search_index, exact_match) -- hmmm
-            count = count + 1
+            match_count = match_count + 1
          end
-        if count == consts.search.max_results then
-            Finder_Logger:warning_print("Current search exceeded max search results pattern: ", pattern)
-            Finder_Logger:warning_print("Be careful with lua pattern searches as they can have unexpected consequences")
-        end
     end
+
     if #self.matches > 0 then
         --vim.print("matches > 0... index is " .. self.match_index .. " and matches holds " .. #self.matches)
         self:update_match_count(win_buf)
+    end
+
+    if match_count == consts.search.max_results then
+            Finder_Logger:error_print("Current search exceeded max search results pattern: ", pattern)
+            Finder_Logger:error_print("Be careful with lua pattern searches as they can lead to quadratic time searches")
+            self:clear_highlights(self.hl_buf, win_buf)
     end
 end
 

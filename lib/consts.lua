@@ -46,6 +46,7 @@
      modes = {
          case_sensitive = "CASE_SENSITIVE",
          lua_pattern = "PATTERN",
+         escape_chars = {")", "("},
          banner_gap = 2,
          case_sensitive_color = "#F18A85",
          pattern_color = "#007FFF",
