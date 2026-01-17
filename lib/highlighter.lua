@@ -109,12 +109,18 @@ function finder_highlighter:highlight_file_by_pattern(win_buf, pattern)
         local search_index = 1
         line, pattern = self.mode_mgr:apply_modes_to_search_text(line, pattern)
 
+        local count = 0
         local pattern_start, pattern_end = string.find(line, pattern, 1, exact_match) -- find the pattern here...
-        while pattern_start ~= nil do
-            -- highlight with start index and end index
+         while pattern_start ~= nil and count < consts.search.max_results do
+             -- highlight with start index and end index
             self:highlight_pattern_in_line(line_number - 1, pattern_start - 1, pattern_end)
             search_index = pattern_end + 1
             pattern_start, pattern_end = string.find(line, pattern, search_index, exact_match) -- hmmm
+            count = count + 1
+         end
+        if count == consts.search.max_results then
+            Finder_Logger:warning_print("Current search exceeded max search results pattern: ", pattern)
+            Finder_Logger:warning_print("Be careful with lua pattern searches as they can have unexpected consequences")
         end
     end
     if #self.matches > 0 then

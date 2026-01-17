@@ -31,6 +31,7 @@
      search = {
         FORWARD = 1,
         BACKWARD = -1,
+        max_results = 10001
      },
      lines = {
          START = 0,
