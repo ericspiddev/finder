@@ -105,6 +105,10 @@ function finder_highlighter:highlight_file_by_pattern(win_buf, pattern)
 
     local exact_match = self.mode_mgr:apply_regex_mode()
 
+    if not exact_match and self:wait_to_search(pattern) then
+        return
+    end
+
     for line_number, line in ipairs(self.hl_context) do
         local search_index = 1
         line, pattern = self.mode_mgr:apply_modes_to_search_text(line, pattern)
@@ -128,6 +132,30 @@ function finder_highlighter:highlight_file_by_pattern(win_buf, pattern)
         self:update_match_count(win_buf)
     end
 end
+
+function finder_highlighter:wait_to_search(pattern)
+    local delay = false
+    local open_count = 0
+    local close_count = 0
+    if string.sub(pattern, -1) == "%" then -- lua patterns can't end with %
+        delay = true
+    end
+    for index = 1, #pattern do
+        local char = pattern:sub(index, index)
+        if char == "[" then
+            open_count = open_count + 1
+        elseif char == "]" then
+            close_count = close_count + 1
+        end
+     end
+    if open_count ~= close_count then
+        delay = true
+    end
+
+    return delay
+end
+
+
 
 -------------------------------------------------------------
 --- highlighter.clear_match_count: clear the match count that
