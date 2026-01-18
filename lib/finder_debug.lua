@@ -1,8 +1,8 @@
 finder_debug = {}
 finder_debug.__index = finder_debug
 
-function finder_debug:new(debug_level, log_function)
-    obj = { debug_level = debug_level, log_function = log_function}
+function finder_debug:new(debug_level, log_function, error_log_function)
+    obj = { debug_level = debug_level, log_function = log_function, error_log = error_log_function}
     return setmetatable(obj, self)
 end
 finder_debug.DEBUG_LEVELS = {DEBUG = 0, INFO = 1, WARNING = 2, ERROR = 3, OFF = 4}
@@ -81,7 +81,11 @@ function finder_debug:finder_print(level, prefix, msg, variable)
         elseif type(self.log_function) ~= 'function' then
             vim.print("Unable to print, internal log function is not a function type " .. type(self.log_function))
         else
-            self.log_function(dbg_msg)
+            if level ~= self.DEBUG_LEVELS.ERROR then
+                self.log_function(dbg_msg)
+            else
+                self.error_log(dbg_msg, vim.log.levels.ERROR) -- vim.notify
+            end
         end
     end
 end

@@ -5,7 +5,7 @@ local M = {}
 
 function M.setup(config)
 
-    _G.Finder_Logger = require("lib.finder_debug"):new(config.debug_level, vim.print)
+    _G.Finder_Logger = require("lib.finder_debug"):new(config.debug_level, vim.print, vim.notify)
     local search_bar_config = {
         relative='editor',
         row=0,

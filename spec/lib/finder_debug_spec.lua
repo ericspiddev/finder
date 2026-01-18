@@ -7,12 +7,18 @@ local stringify_table = function(table)
     return vim.inspect(table)
 end
 
+function create_debug_logger(level, print_func, error_func)
+    print_func = print_func or vim.print
+    error_func = error_func or vim.notify
+    return debug:new(level, print_func, error_func)
+end
+
 describe('debug', function()
 
     it('successfully evaluates the debug level', function()
 
         stub(vim, "print")
-        local dbg = debug:new(levels.OFF, vim.print)
+        local dbg = create_debug_logger(levels.OFF)
 
         assert(not dbg:check_debug_level(nil))
         assert(not dbg:check_debug_level())
@@ -22,25 +28,25 @@ describe('debug', function()
         assert(not dbg:check_debug_level(levels.WARNING))
         assert(not dbg:check_debug_level(levels.DEBUG))
 
-        dbg = debug:new(levels.ERROR, vim.print)
+        dbg = create_debug_logger(levels.ERROR)
         assert(dbg:check_debug_level(levels.ERROR))
         assert(not dbg:check_debug_level(levels.INFO))
         assert(not dbg:check_debug_level(levels.WARNING))
         assert(not dbg:check_debug_level(levels.DEBUG))
 
-        dbg = debug:new(levels.WARNING, vim.print)
+        dbg = create_debug_logger(levels.WARNING)
         assert(dbg:check_debug_level(levels.ERROR))
         assert(not dbg:check_debug_level(levels.INFO))
         assert(dbg:check_debug_level(levels.WARNING))
         assert(not dbg:check_debug_level(levels.DEBUG))
 
-        dbg = debug:new(levels.INFO, vim.print)
+        dbg = create_debug_logger(levels.INFO)
         assert( dbg:check_debug_level(levels.ERROR))
         assert( dbg:check_debug_level(levels.INFO))
         assert( dbg:check_debug_level(levels.WARNING))
         assert(not dbg:check_debug_level(levels.DEBUG))
 
-        dbg = debug:new(levels.DEBUG, vim.print)
+        dbg = create_debug_logger(levels.DEBUG)
         assert(dbg:check_debug_level(levels.ERROR))
         assert(dbg:check_debug_level(levels.INFO))
         assert(dbg:check_debug_level(levels.WARNING))
@@ -55,10 +61,9 @@ describe('debug', function()
     it('is able to print different variable types', function()
         local last_msg = ""
         local NO_PREFIX =""
-        local fake_print = {
-            print = function(message) last_msg = message end
-        }
-        local dbg = debug:new(levels.DEBUG, fake_print['print'])
+        local fake_print = function(message) last_msg = message end
+
+        local dbg = create_debug_logger(levels.DEBUG, fake_print, fake_print)
 
         dbg:finder_print(levels.ERROR, NO_PREFIX, "Test message")
         assert.equals(last_msg, "Test message")
@@ -102,10 +107,9 @@ describe('debug', function()
             middle = "j",
             last = "spidle"
         }
-        local fake_print = {
-            print = function(message) last_msg = message end
-        }
-        local dbg = debug:new(levels.DEBUG, fake_print['print'])
+        local fake_print = function (message) last_msg = message end
+            --print = function(message) last_msg = message end
+        local dbg = create_debug_logger(levels.DEBUG, fake_print, fake_print)
         dbg:debug_print("Who is the coolest person ever? ", name)
         assert.equals(last_msg, "[FINDER DBG]: Who is the coolest person ever? eric")
 
@@ -133,10 +137,8 @@ describe('debug', function()
         local last_msg = ""
         local name = "Eric?"
 
-        local fake_print = {
-            print = function(message) last_msg = message end
-        }
-        local dbg = debug:new(levels.OFF, fake_print['print'])
+        local fake_print = function(message) last_msg = message end
+        local dbg = create_debug_logger(levels.OFF, fake_print, fake_print)
         dbg:debug_print("Did you get this message, ", name)
         assert.equals(last_msg, "")
         dbg:info_print("Did you get this message, ", name)
@@ -146,7 +148,7 @@ describe('debug', function()
         dbg:error_print("Did you get this message, ", name)
         assert.equals(last_msg, "")
 
-        dbg = debug:new(levels.ERROR, fake_print['print'])
+        dbg = create_debug_logger(levels.ERROR, fake_print, fake_print)
         dbg:debug_print("Did you get this message, ", name)
         assert.equals(last_msg, "")
         dbg:info_print("Did you get this message, ", name)
@@ -157,7 +159,7 @@ describe('debug', function()
         assert.equals(last_msg, "[FINDER ERR]: Did you get this message, Eric?")
         last_msg = ""
 
-        dbg = debug:new(levels.WARNING, fake_print['print'])
+        dbg = create_debug_logger(levels.WARNING, fake_print, fake_print)
         dbg:debug_print("Did you get this message, ", name)
         assert.equals(last_msg, "")
         dbg:info_print("Did you get this message, ", name)
@@ -168,7 +170,7 @@ describe('debug', function()
         assert.equals(last_msg, "[FINDER ERR]: Did you get this message, Eric?")
         last_msg = ""
 
-        dbg = debug:new(levels.INFO, fake_print['print'])
+        dbg = create_debug_logger(levels.INFO, fake_print, fake_print)
         dbg:debug_print("Did you get this message, ", name)
         assert.equals(last_msg, "")
         dbg:info_print("Did you get this message, ", name)
@@ -179,7 +181,7 @@ describe('debug', function()
         assert.equals(last_msg, "[FINDER ERR]: Did you get this message, Eric?")
         last_msg = ""
 
-        dbg = debug:new(levels.DEBUG, fake_print['print'])
+        dbg = create_debug_logger(levels.DEBUG, fake_print, fake_print)
         dbg:debug_print("Did you get this message, ", name)
         assert.equals(last_msg, "[FINDER DBG]: Did you get this message, Eric?")
         dbg:info_print("Did you get this message, ", name)
