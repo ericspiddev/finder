@@ -21,6 +21,8 @@ describe('pattern_handler', function ()
         assert(ph:wait_to_search("]]]]"))
         assert(ph:wait_to_search("[[["))
 
+        assert(ph:wait_to_search("[]")) -- invalid pattern searching
+
     end)
 
     it('properly adds as % before escape characters', function ()

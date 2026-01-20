@@ -17,6 +17,11 @@ function finder_pattern_handler:wait_to_search(pattern)
     if string.sub(pattern, -1) == "%" then -- lua patterns can't end with %
         delay = true
     end
+
+    if pattern == "[]" then
+        delay = true
+    end
+
     for index = 1, #pattern do
         local char = pattern:sub(index, index)
         if char == "[" then
