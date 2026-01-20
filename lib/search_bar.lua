@@ -129,6 +129,10 @@ function finder_search_bar:open()
     if not self:is_open() then
         Finder_Logger:debug_print("Opening window")
         local window = vim.api.nvim_get_current_win()
+        local config = vim.api.nvim_win_get_config(window)
+        if config.relative ~= "" then
+            return
+        end
         self.search_window = window
         self.width_percent = self:cap_width(self.width_percent)
         self.query_buffer = vim.api.nvim_create_buf(consts.buffer.LIST_BUFFER, consts.buffer.SCRATCH_BUFFER)
