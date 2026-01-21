@@ -1,7 +1,7 @@
-finder_history = {}
+scout_history = {}
 
-finder_history.__index = finder_history
-function finder_history:new(max)
+scout_history.__index = scout_history
+function scout_history:new(max)
     local obj = {
         history_index = 1, -- one for bookmarking
         viewing_index = 0, -- one for retrieving data
@@ -11,7 +11,7 @@ function finder_history:new(max)
     return setmetatable(obj, self)
 end
 
-function finder_history:add_entry(search)
+function scout_history:add_entry(search)
     if #self.entries > 0 and self.entries[#self.entries] == search then
         return
     end
@@ -21,7 +21,7 @@ function finder_history:add_entry(search)
     end
 end
 
-function finder_history:is_empty()
+function scout_history:is_empty()
     return #self.entries == 0
 end
 
@@ -33,7 +33,7 @@ function update_history_index(self)
     end
 end
 
-function finder_history:get_next_entry()
+function scout_history:get_next_entry()
     if self.viewing_index == #self.entries then
         self.viewing_index = 1
     else
@@ -43,7 +43,7 @@ function finder_history:get_next_entry()
     return self:get_entry(self.viewing_index)
 end
 
-function finder_history:get_previous_entry()
+function scout_history:get_previous_entry()
     if self.viewing_index <= 1 then
         self.viewing_index = #self.entries  -- set to newest entry in the table
     else
@@ -53,11 +53,11 @@ function finder_history:get_previous_entry()
     return self:get_entry(self.viewing_index)
 end
 
-function finder_history:get_entry(index)
+function scout_history:get_entry(index)
     if index and index <= #self.entries and index > 0 then
         return self.entries[index]
     end
     return nil
 end
 
-return finder_history
+return scout_history

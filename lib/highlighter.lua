@@ -1,10 +1,10 @@
-finder_highlighter = {}
-finder_highlighter.__index = finder_highlighter
+scout_highlighter = {}
+scout_highlighter.__index = scout_highlighter
 local consts = require("lib.consts")
 local match_obj = require("lib.match")
 local pattern_handler = require("lib.pattern_handler"):new(consts.modes.escape_chars)
 
-function finder_highlighter:new(editor_window, result_hl_style, selected_hl_style, hl_namespace, mode_mgr)
+function scout_highlighter:new(editor_window, result_hl_style, selected_hl_style, hl_namespace, mode_mgr)
     local obj = {
         hl_buf = vim.api.nvim_win_get_buf(editor_window),
         hl_win = editor_window,
@@ -30,10 +30,10 @@ end
 --- get_highlights      nvim_buf_get_extmarks
 --- remove              nvim_buf_del_extmark
 ---
-function finder_highlighter:get_hl_fns()
+function scout_highlighter:get_hl_fns()
     local fns = {
         highlight = vim.api.nvim_buf_set_extmark,
-        get_all_highlights = vim.api.nvim_buf_get_extmarks, -- (highlightBuf, finderNamespace, 0, -1, {})
+        get_all_highlights = vim.api.nvim_buf_get_extmarks, -- (highlightBuf, scoutNamespace, 0, -1, {})
         remove_highlight = vim.api.nvim_buf_del_extmark
     }
     return fns
@@ -44,12 +44,12 @@ end
 --- result numbers in the search_bar and then reads the buffer
 --- id into hl_context field
 --- @hl_buf: the buffer that will have it's contents loaded into hl_context
---- @finder_buf: search bar buffer this is used to clear search numbers
+--- @scout_buf: search bar buffer this is used to clear search numbers
 --- (rename to query_buffer or use buf directly?)
 --- @return: whether or not the context was updated
 ---
-function finder_highlighter:update_hl_context(hl_buf, finder_buf)
-    self:clear_match_count(finder_buf)
+function scout_highlighter:update_hl_context(hl_buf, scout_buf)
+    self:clear_match_count(scout_buf)
     return self:populate_hl_context(hl_buf)
 end
 
@@ -60,9 +60,9 @@ end
 --- @buf_id: the buffer to load into highlight context field
 --- @return: whether or not the context was populated
 ---
-function finder_highlighter:populate_hl_context(buf_id)
+function scout_highlighter:populate_hl_context(buf_id)
     if not vim.api.nvim_buf_is_valid(buf_id) then
-        Finder_Logger.warning_print("Attempting to populate context with invalid buffer id")
+        Scout_Logger.warning_print("Attempting to populate context with invalid buffer id")
         self.hl_context = consts.buffer.NO_CONTEXT
         self.hl_buf = consts.buffer.INVALID_BUFFER
         return false
@@ -72,14 +72,14 @@ function finder_highlighter:populate_hl_context(buf_id)
         self.hl_buf = buf_id
         self.hl_win = vim.fn.bufwinid(buf_id)
 
-        Finder_Logger:debug_print("Populating context with " .. total_lines .. " total lines")
+        Scout_Logger:debug_print("Populating context with " .. total_lines .. " total lines")
 
-        Finder_Logger:debug_print("Populating context with " .. total_lines .. " total lines")
+        Scout_Logger:debug_print("Populating context with " .. total_lines .. " total lines")
         self.hl_context = vim.api.nvim_buf_get_lines(buf_id, consts.lines.START, total_lines, false)
-        Finder_Logger:debug_print("HL context set too " .. vim.inspect(self.hl_context))
+        Scout_Logger:debug_print("HL context set too " .. vim.inspect(self.hl_context))
         return true
     else
-        Finder_Logger:warning_print("No valid lines found to populate highlight context")
+        Scout_Logger:warning_print("No valid lines found to populate highlight context")
         self.hl_context = consts.buffer.NO_CONTEXT
         self.hl_buf = consts.buffer.INVALID_BUFFER
         return false
@@ -93,14 +93,14 @@ end
 --- @win_buf: the buffer to update the search results ex (3/5) in
 --- @pattern: the pattern to highlight within the hl_context
 ---
-function finder_highlighter:highlight_file_by_pattern(win_buf, pattern)
+function scout_highlighter:highlight_file_by_pattern(win_buf, pattern)
 
     if pattern == nil or pattern == "" then
-        Finder_Logger:warning_print("Nil or empty pattern cancelling search")
+        Scout_Logger:warning_print("Nil or empty pattern cancelling search")
         return
     end
     if self.hl_context == consts.buffer.NO_CONTEXT then
-        Finder_Logger:warning_print("No context to search through")
+        Scout_Logger:warning_print("No context to search through")
         return
     end
 
@@ -135,8 +135,8 @@ function finder_highlighter:highlight_file_by_pattern(win_buf, pattern)
     end
 
     if match_count == consts.search.max_results then
-            Finder_Logger:error_print("Current search exceeded max search results pattern: ", pattern)
-            Finder_Logger:error_print("Be careful with lua pattern searches as they can lead to quadratic time searches")
+            Scout_Logger:error_print("Current search exceeded max search results pattern: ", pattern)
+            Scout_Logger:error_print("Be careful with lua pattern searches as they can lead to quadratic time searches")
             self:clear_highlights(self.hl_buf, win_buf)
     end
 end
@@ -146,7 +146,7 @@ end
 --- tracks current search result in the search window
 --- @buffer: the buffer that the match count is present in (query buf)
 ---
-function finder_highlighter:clear_match_count(buffer)
+function scout_highlighter:clear_match_count(buffer)
     if self.hl_wc_ext_id ~= consts.highlight.NO_WORD_COUNT_EXTMARK
     and buffer ~= nil
     and vim.api.nvim_buf_is_valid(buffer) then
@@ -161,7 +161,7 @@ end
 --- in the search bar buffer
 --- @buffer: the buffer where the search count is located (query_buffer)
 ---
-function finder_highlighter:update_match_count(buffer)
+function scout_highlighter:update_match_count(buffer)
     local match = self.match_index
     local match_list = self.matches
     if match ~= nil and match > -1
@@ -186,7 +186,7 @@ end
 --- @word_start: start index (col) of the word on the line
 --- @word_end: end index (col) of the word on the line
 ---
-function finder_highlighter:highlight_pattern_in_line(line_number, word_start, word_end)
+function scout_highlighter:highlight_pattern_in_line(line_number, word_start, word_end)
     local extmark_id = self.hl_fns.highlight(self.hl_buf, self.hl_namespace, line_number, word_start,
         { end_col = word_end, hl_group = self.result_hl_style })
     table.insert(self.matches, match_obj:new(line_number + 1, word_start, word_end, extmark_id))
@@ -198,26 +198,26 @@ end
 --- search result to be highlighted differently to show it's selected
 --- @direction: which way to iterate through matches (forward or backward)
 ---
-function finder_highlighter:move_cursor(index)
+function scout_highlighter:move_cursor(index)
     if not index then
-        Finder_Logger:error_print("Nil index!")
+        Scout_Logger:error_print("Nil index!")
         return
     end
     if index <= 0 or index > #self.matches then
-        Finder_Logger:error_print("Invalid index: ", index)
+        Scout_Logger:error_print("Invalid index: ", index)
         return
     end
 
     if self.hl_win == consts.window.INVALID_WINDOW_ID then
-        Finder_Logger:error_print("Invalid window id to move cursor through" )
+        Scout_Logger:error_print("Invalid window id to move cursor through" )
         return
     end
 
     local buf_window = vim.fn.bufwinid(self.hl_buf)
     if self.hl_win ~= buf_window then
-        Finder_Logger:warning_print("Window id holding buffer and stored highlight window mismatch!")
-        Finder_Logger:warning_print("Expected to move cursor for window ", buf_window)
-        Finder_Logger:warning_print("Actually moving through ", self.hl_win)
+        Scout_Logger:warning_print("Window id holding buffer and stored highlight window mismatch!")
+        Scout_Logger:warning_print("Expected to move cursor for window ", buf_window)
+        Scout_Logger:warning_print("Actually moving through ", self.hl_win)
     end
 
     self:set_match_highlighting(self.matches[self.match_index], self.result_hl_style)
@@ -239,7 +239,7 @@ end
 --- @match: which way to iterate through matches (forward or backward)
 --- @hl: the style to highlight the passed in match
 --- (move me to match class??? weird spot with this one)
-function finder_highlighter:set_match_highlighting(match, hl)
+function scout_highlighter:set_match_highlighting(match, hl)
     if match ~= nil then
         local ext_id = self.hl_fns.highlight(self.hl_buf, self.hl_namespace, match:get_highlight_row(), match.m_start,
         { id = match.extmark_id, end_col = match.m_end, hl_group = hl })
@@ -253,10 +253,10 @@ end
 --- only effects extmarks this class sets because of the namespace
 --- @buffer: the buffer with the highlight extmarks to retrieve
 ---
-function finder_highlighter:get_buffer_current_hls(buffer)
+function scout_highlighter:get_buffer_current_hls(buffer)
     local ids = {}
     if buffer == nil or not vim.api.nvim_buf_is_valid(buffer) then
-        Finder_Logger:warning_print("Invalid buffer to serach", buffer)
+        Scout_Logger:warning_print("Invalid buffer to serach", buffer)
         return nil
     end
     if self.matches ~= nil then
@@ -267,7 +267,7 @@ function finder_highlighter:get_buffer_current_hls(buffer)
     return ids
 end
 
-function finder_highlighter:get_closest_match(search_direction)
+function scout_highlighter:get_closest_match(search_direction)
     if #self.matches == 0 then
         return nil
     end
@@ -325,14 +325,14 @@ end
 --- @hl_buf: buffer that is currently being searched (likely shown in current window)
 --- @win_buf: query buffer that holds the match count e.x. (3/5)
 ---
-function finder_highlighter:clear_highlights(hl_buf, win_buf)
+function scout_highlighter:clear_highlights(hl_buf, win_buf)
     self:clear_match_count(win_buf)
     for _, match_id in ipairs(self:get_buffer_current_hls(hl_buf)) do
         self.hl_fns.remove_highlight(self.hl_buf, self.hl_namespace, match_id)
     end
 end
 
-function finder_highlighter:dump_context()
+function scout_highlighter:dump_context()
     vim.print("Dump context: ")
     if self.hl_context ~= nil then
         for line_number, line in ipairs(self.hl_context) do
@@ -353,4 +353,4 @@ function finder_highlighter:dump_context()
     end
 end
 
-return finder_highlighter
+return scout_highlighter

@@ -1,8 +1,8 @@
-finder_pattern_handler = {}
-finder_pattern_handler.__index = finder_pattern_handler
+scout_pattern_handler = {}
+scout_pattern_handler.__index = scout_pattern_handler
 
 
-function finder_pattern_handler:new(escape_chars)
+function scout_pattern_handler:new(escape_chars)
     local obj = {
         escape_chars = escape_chars
     }
@@ -10,7 +10,7 @@ function finder_pattern_handler:new(escape_chars)
 end
 
 
-function finder_pattern_handler:wait_to_search(pattern)
+function scout_pattern_handler:wait_to_search(pattern)
     local delay = false
     local open_count = 0
     local close_count = 0
@@ -37,7 +37,7 @@ function finder_pattern_handler:wait_to_search(pattern)
     return delay
 end
 
-function finder_pattern_handler:escape_pattern_characters(pattern)
+function scout_pattern_handler:escape_pattern_characters(pattern)
 
     for _, escape_char in ipairs(self.escape_chars) do
         pattern = string.gsub(pattern,"%" .. escape_char, "%%".. escape_char)
@@ -46,4 +46,4 @@ function finder_pattern_handler:escape_pattern_characters(pattern)
     return pattern
 end
 
-return finder_pattern_handler
+return scout_pattern_handler

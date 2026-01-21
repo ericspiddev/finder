@@ -2,7 +2,7 @@ local mode = require("lib.search_mode")
 local stub = require("luassert.stub")
 local consts = require("lib.consts")
 local utils = require("spec.spec_utils")
-local dbg = require("lib.finder_debug")
+local logger = require("lib.scout_logger")
 utils:register_global_logger()
 describe('search mode', function ()
 
@@ -33,7 +33,7 @@ describe('search mode', function ()
     end)
 
     it('adds a highlight with the passed in color and name and error prints on nil args', function ()
-        utils:mock_debug_prints()
+        utils:mock_logger_prints()
         local namespace_id = 0
         local color = "Orange"
         local name = "Eric Mode"
@@ -45,23 +45,23 @@ describe('search mode', function ()
         name = "Eric Mode"
         m = mode:new(name, "E", namespace_id, color)
         assert.stub(vim.api.nvim_set_hl).was_not.called_with(namespace_id, m.hl_name, {fg = color, force = true, italic = true})
-        utils:finder_print_was_called(dbg.DEBUG_LEVELS.ERROR, "Nil argument passed to create_mode_highlight unable to for mode: ", m.hl_name)
+        utils:scout_print_was_called(logger.DEBUG_LEVELS.ERROR, "Nil argument passed to create_mode_highlight unable to for mode: ", m.hl_name)
 
         namespace_id = 0
         color = nil
         name = "Eric Mode"
         m = mode:new(name, "E", namespace_id, color)
         assert.stub(vim.api.nvim_set_hl).was_not.called_with(namespace_id, m.hl_name, {fg = color, force = true})
-        utils:finder_print_was_called(dbg.DEBUG_LEVELS.ERROR, "Nil argument passed to create_mode_highlight unable to for mode: ", m.hl_name)
+        utils:scout_print_was_called(logger.DEBUG_LEVELS.ERROR, "Nil argument passed to create_mode_highlight unable to for mode: ", m.hl_name)
 
         namespace_id = 0
         color = "orange"
         name = nil
         m = mode:new(name, "E", namespace_id, color)
         assert.stub(vim.api.nvim_set_hl).was_not.called_with(namespace_id, m.hl_name, {fg = color, force = true})
-        utils:finder_print_was_called(dbg.DEBUG_LEVELS.ERROR, "Nil argument passed to create_mode_highlight unable to for mode: ", '')
+        utils:scout_print_was_called(logger.DEBUG_LEVELS.ERROR, "Nil argument passed to create_mode_highlight unable to for mode: ", '')
 
-        utils:revert_debug_prints()
+        utils:revert_logger_prints()
     end)
 
     it('Does not show a banner if the mode variables have invalid IDs', function ()

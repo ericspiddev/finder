@@ -7,16 +7,16 @@ local mode_manager = require("lib.mode_manager")
 local search_mode = require("lib.search_mode")
 
 keymap_mgr = nil -- global varaible used to init the keymappings for the search bar
-finder_search_bar = {}
-finder_search_bar.__index = finder_search_bar
+scout_search_bar = {}
+scout_search_bar.__index = scout_search_bar
 
-finder_search_bar.VALID_WINDOW_EVENTS = {"on_lines", "on_bytes", "on_changedtick", "on_detach", "on_reload"}
-finder_search_bar.MIN_WIDTH = 0.10
-finder_search_bar.MAX_WIDTH = 1
+scout_search_bar.VALID_WINDOW_EVENTS = {"on_lines", "on_bytes", "on_changedtick", "on_detach", "on_reload"}
+scout_search_bar.MIN_WIDTH = 0.10
+scout_search_bar.MAX_WIDTH = 1
 
-function finder_search_bar:new(window_config, width_percent, should_enter)
+function scout_search_bar:new(window_config, width_percent, should_enter)
     local current_editing_win = vim.api.nvim_get_current_win()
-    local namespace = vim.api.nvim_create_namespace(consts.highlight.FINDER_NAMESPACE)
+    local namespace = vim.api.nvim_create_namespace(consts.highlight.SCOUT_NAMESPACE)
     local mode_mgr = mode_manager:new(create_search_bar_modes(namespace))
     local obj = {
         query_buffer = consts.buffer.INVALID_BUFFER,
@@ -49,7 +49,7 @@ end
 --- allows the user to go to and from search results
 --- @...: varadic arguments not really used however since none
 --- of the parameters are used at this time
-function finder_search_bar:on_lines_handler(...)
+function scout_search_bar:on_lines_handler(...)
   local event, bufnr, changedtick,
     first_line, last_line,
     new_lastline, bytecount = ...
@@ -61,17 +61,17 @@ function finder_search_bar:on_lines_handler(...)
         self.highlighter:update_hl_context(self.highlighter.hl_buf, self.query_buffer)
         self.highlighter.match_index = 1
         self.highlighter.matches = {}
-        Finder_Logger:debug_print("Searching buffer for pattern ", search)
+        Scout_Logger:debug_print("Searching buffer for pattern ", search)
         self.highlighter:highlight_file_by_pattern(self.query_buffer, search)
 
     end)
 end
 
 -------------------------------------------------------------
---- search_bar.is_open: checks wether or not the finder search
+--- search_bar.is_open: checks wether or not the scout search
 --- bar is open based on the current window id
 ---
-function finder_search_bar:is_open()
+function scout_search_bar:is_open()
     return self.win_id ~= consts.window.INVALID_WINDOW_ID
 end
 
@@ -79,7 +79,7 @@ end
 --- search_bar.get_window_contents: gets the contents of the
 --- search bar window (currently hardcoded to the first line)
 ---
-function finder_search_bar:get_window_contents()
+function scout_search_bar:get_window_contents()
     return vim.api.nvim_buf_get_lines(self.query_buffer, 0, 1, true)[1]
 end
 
@@ -87,7 +87,7 @@ end
 --- search_bar.toggle: toggles the status of the window so
 --- if it's closed open it and vice versa
 ---
-function finder_search_bar:toggle()
+function scout_search_bar:toggle()
     if self:is_open() then
         self:close()
     else
@@ -102,7 +102,7 @@ end
 --- @new_col: the new column where the new window has opened
 --- this is used to calculate where to start the search bar window
 ---
-function finder_search_bar:move_window(new_col)
+function scout_search_bar:move_window(new_col)
     if self:is_open() then
         if new_col > 0 then
             self.query_win_config.col = new_col - self.query_win_config.width - 1
@@ -111,7 +111,7 @@ function finder_search_bar:move_window(new_col)
     end
 end
 
-function finder_search_bar:cap_width(width)
+function scout_search_bar:cap_width(width)
     if width > self.MAX_WIDTH then
         width = self.MAX_WIDTH
     elseif width < self.MIN_WIDTH then
@@ -125,9 +125,9 @@ end
 --- function considers the width_percent that the bar should
 --- take up and then calculates it's width based on that
 ---
-function finder_search_bar:open()
+function scout_search_bar:open()
     if not self:is_open() then
-        Finder_Logger:debug_print("Opening window")
+        Scout_Logger:debug_print("Opening window")
         local window = vim.api.nvim_get_current_win()
         local config = vim.api.nvim_win_get_config(window)
         if config.relative ~= "" then
@@ -142,16 +142,16 @@ function finder_search_bar:open()
 
         self.mode_manager:update_relative_window(self.win_id)
         if self.highlighter.hl_context == consts.buffer.NO_CONTEXT then
-            Finder_Logger:warning_print("No valid context found attempting to populate now")
+            Scout_Logger:warning_print("No valid context found attempting to populate now")
             self.highlighter:update_hl_context(window, self.win_id)
         end
         self.search_events = events:new(consts.buffer.VALID_LUA_EVENTS) -- make new events table with buffer events
         self.search_events:add_event("on_lines", self, "on_lines_handler") -- add the on_lines_handler to search bar's
         self.search_events:attach_buffer_events(self.query_buffer)
         vim.cmd('startinsert') -- allow for typing right away
-        keymap_mgr:setup_finder_keymaps()
+        keymap_mgr:setup_scout_keymaps()
     else
-        Finder_Logger:debug_print("Attempted to open an already open window ignoring...")
+        Scout_Logger:debug_print("Attempted to open an already open window ignoring...")
     end
 end
 
@@ -160,11 +160,11 @@ end
 --- all of the associated keymaps also frees the buffers
 --- associated with the searching
 ---
-function finder_search_bar:close()
+function scout_search_bar:close()
     if self:is_open() then
         close_id = self.win_id
         self.win_id = consts.window.INVALID_WINDOW_ID
-        Finder_Logger:debug_print("Closing open window")
+        Scout_Logger:debug_print("Closing open window")
 
         keymap_mgr:teardown_search_keymaps()
         keymap_mgr:teardown_history_keymaps()
@@ -174,7 +174,7 @@ function finder_search_bar:close()
         vim.api.nvim_buf_delete(self.query_buffer, {force = true}) -- buffer must be deleted after window otherwise window_close gives bad id
         self.query_buffer = consts.buffer.INVALID_BUFFER
     else
-        Finder_Logger:debug_print("Attempted to close a but now window was open ignoring...")
+        Scout_Logger:debug_print("Attempted to close a but now window was open ignoring...")
     end
 end
 
@@ -182,7 +182,7 @@ end
 --- search_bar.previous_match KEYMAP: used to move backward in
 --- the match list
 ---
-function finder_search_bar:previous_match()
+function scout_search_bar:previous_match()
     self.history:add_entry(self:get_window_contents())
     local next_index = self.highlighter:get_closest_match(consts.search.BACKWARD)
     self:move_selected_match(next_index)
@@ -192,19 +192,19 @@ end
 --- search_bar.next_match KEYMAP: used to move forward in the
 --- match list
 ---
-function finder_search_bar:next_match()
+function scout_search_bar:next_match()
     self.history:add_entry(self:get_window_contents()) -- add the entry
     local next_index = self.highlighter:get_closest_match(consts.search.FORWARD)
     self:move_selected_match(next_index)
 end
 
-function finder_search_bar:next_history_entry()
+function scout_search_bar:next_history_entry()
     local entry = self.history:get_next_entry()
     vim.api.nvim_buf_set_lines(self.query_buffer, consts.lines.START, consts.lines.END,
                               true, {entry})
 end
 
-function finder_search_bar:previous_history_entry()
+function scout_search_bar:previous_history_entry()
     local entry = self.history:get_previous_entry()
     vim.api.nvim_buf_set_lines(self.query_buffer, consts.lines.START, consts.lines.END,
                               true, {entry})
@@ -217,13 +217,13 @@ end
 --- @direction: which way to go when iterating ove the list
 --- (FORWARD OR BACKWARD)
 ---
-function finder_search_bar:move_selected_match(index)
+function scout_search_bar:move_selected_match(index)
     if self.highlighter.matches ~= nil and #self.highlighter.matches > 0 then
         self.highlighter:move_cursor(index)
         self.highlighter:clear_match_count(self.query_buffer)
         self.highlighter:update_match_count(self.query_buffer)
     else
-        Finder_Logger:debug_print("Matches is either undefined or empty ignoring enter")
+        Scout_Logger:debug_print("Matches is either undefined or empty ignoring enter")
     end
 end
 
@@ -231,9 +231,9 @@ end
 --- search_bar.clear_search KEYMAP: used to clear the contents
 --- of the search bar buffer and window
 ---
-function finder_search_bar:clear_search()
+function scout_search_bar:clear_search()
     vim.api.nvim_buf_set_lines(self.query_buffer, consts.lines.START, consts.lines.END,
                               true, consts.buffer.EMPTY_BUFFER)
 end
 
-return finder_search_bar
+return scout_search_bar

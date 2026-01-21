@@ -1,4 +1,4 @@
-local debug = require('lib.finder_debug')
+local logger = require('lib.scout_logger')
 local mock = require('luassert.mock')
 local match = require('luassert.match')
 local consts = require('lib.consts')
@@ -6,7 +6,7 @@ local search_mode = require('lib.search_mode')
 spec_utils = {}
 
 spec_utils.__index = spec_utils
-local mock_debug = nil
+local mock_logger = nil
 
 function spec_utils:compare_matches(m1, m2)
     if not (m1.row == m2.row and
@@ -28,12 +28,12 @@ function spec_utils:table_contains(table, check)
     return false
 end
 
-function spec_utils:mock_debug_prints()
-    mock_debug = mock(debug, true)
-    mock_debug.debug_print.returns()
-    mock_debug.info_print.returns()
-    mock_debug.warning_print.returns()
-    mock_debug.error_print.returns()
+function spec_utils:mock_logger_prints()
+    mock_logger = mock(logger, true)
+    mock_logger.debug_print.returns()
+    mock_logger.info_print.returns()
+    mock_logger.warning_print.returns()
+    mock_logger.error_print.returns()
 end
 
 function spec_utils:lists_are_equal(t1, t2)
@@ -48,19 +48,19 @@ function spec_utils:lists_are_equal(t1, t2)
     return true
 end
 
-function spec_utils:finder_print_was_called(level, message, var)
-    if mock_debug == nil then
+function spec_utils:scout_print_was_called(level, message, var)
+    if mock_logger == nil then
         assert(false)
     end
     local print_fn = nil
-    if level == debug.DEBUG_LEVELS.ERROR then
-        print_fn = mock_debug.error_print
-    elseif level == debug.DEBUG_LEVELS.WARNING then
-        print_fn = mock_debug.warning_print
-    elseif level == debug.DEBUG_LEVELS.INFO then
-        print_fn = mock_debug.info_print
-    elseif level == debug.DEBUG_LEVELS.DEBUG then
-        print_fn = mock_debug.debug_print
+    if level == logger.DEBUG_LEVELS.ERROR then
+        print_fn = mock_logger.error_print
+    elseif level == logger.DEBUG_LEVELS.WARNING then
+        print_fn = mock_logger.warning_print
+    elseif level == logger.DEBUG_LEVELS.INFO then
+        print_fn = mock_logger.info_print
+    elseif level == logger.DEBUG_LEVELS.DEBUG then
+        print_fn = mock_logger.debug_print
     else
         return
     end
@@ -79,18 +79,18 @@ function spec_utils:finder_print_was_called(level, message, var)
 end
 
 function spec_utils:register_global_logger()
-    if _G.Finder_Logger == nil then
-        _G.Finder_Logger = require("lib.finder_debug"):new(debug.DEBUG_LEVELS.OFF, vim.print)
+    if _G.Scout_Logger == nil then
+        _G.Scout_Logger = require("lib.scout_logger"):new(logger.DEBUG_LEVELS.OFF, vim.print)
     end
 end
 
-function spec_utils:revert_debug_prints()
-    if mock_debug ~= nil then
-        mock_debug.debug_print:revert()
-        mock_debug.info_print:revert()
-        mock_debug.warning_print:revert()
-        mock_debug.error_print:revert()
-        mock_debug = nil
+function spec_utils:revert_logger_prints()
+    if mock_logger ~= nil then
+        mock_logger.debug_print:revert()
+        mock_logger.info_print:revert()
+        mock_logger.warning_print:revert()
+        mock_logger.error_print:revert()
+        mock_logger = nil
     end
 end
 

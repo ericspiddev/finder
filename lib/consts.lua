@@ -24,7 +24,7 @@
      },
      highlight = {
          NO_WORD_COUNT_EXTMARK = -1,
-         FINDER_NAMESPACE = "finder",
+         SCOUT_NAMESPACE = "SCOUT",
          MATCH_HIGHLIGHT = "Search",
          CURR_MATCH_HIGHLIGHT = "WildMenu" --CurSearch",
      },

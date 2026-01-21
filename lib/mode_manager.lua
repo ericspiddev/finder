@@ -1,8 +1,8 @@
-finder_mode_manager = {}
+scout_mode_manager = {}
 local consts = require("lib.consts")
 
-finder_mode_manager.__index = finder_mode_manager
-function finder_mode_manager:new(modes)
+scout_mode_manager.__index = scout_mode_manager
+function scout_mode_manager:new(modes)
     local obj = {
         modes = modes,
         next_banner_col = 0
@@ -14,17 +14,17 @@ end
 -- when each mode is active we should display a little window with a letter
 -- toggling it to off should hide that window
 
-function finder_mode_manager:validate_mode(mode_index)
+function scout_mode_manager:validate_mode(mode_index)
     if self.modes[mode_index] == nil then
-        Finder_Logger:error_print("Attempting to perform an operation on an unsupported mode")
+        Scout_Logger:error_print("Attempting to perform an operation on an unsupported mode")
         return false
     end
     return true
 end
 
-function finder_mode_manager:toggle_mode(mode_index)
+function scout_mode_manager:toggle_mode(mode_index)
     if not self:validate_mode(mode_index) then
-        Finder_Logger:error_print("Cannot toggle mode")
+        Scout_Logger:error_print("Cannot toggle mode")
         return
     end
     local target_mode_status = self.modes[mode_index] -- validated so should be ok to just use here
@@ -44,23 +44,23 @@ function finder_mode_manager:toggle_mode(mode_index)
     target_mode_status.active = not target_mode_status.active
 end
 
-function finder_mode_manager:set_mode(mode, value)
+function scout_mode_manager:set_mode(mode, value)
     if not self:validate_mode(mode) then
-        Finder_Logger:error_print("Cannot set mode")
+        Scout_Logger:error_print("Cannot set mode")
         return
     end
     self.modes[mode].active = value
 end
 
-function finder_mode_manager:get_mode_status(mode)
+function scout_mode_manager:get_mode_status(mode)
     if not self:validate_mode(mode) then
-        Finder_Logger:error_print("Cannot get mode's value")
+        Scout_Logger:error_print("Cannot get mode's value")
         return
     end
     return self.modes[mode].active
 end
 
-function finder_mode_manager:update_relative_window(win_id)
+function scout_mode_manager:update_relative_window(win_id)
     local new_window = nil
     if vim.api.nvim_win_is_valid(win_id) then
         new_window = win_id
@@ -75,7 +75,7 @@ function finder_mode_manager:update_relative_window(win_id)
     end
 end
 
-function finder_mode_manager:close_all_modes()
+function scout_mode_manager:close_all_modes()
     if self.modes ~= nil then
         for _, mode in pairs(self.modes) do
             if mode.active then
@@ -87,12 +87,12 @@ function finder_mode_manager:close_all_modes()
     end
 end
 
-function finder_mode_manager:apply_modes_to_search_text(line, pattern)
+function scout_mode_manager:apply_modes_to_search_text(line, pattern)
     line, pattern = self:apply_match_case(line, pattern)
     return line, pattern
 end
 
-function finder_mode_manager:apply_match_case(line, pattern)
+function scout_mode_manager:apply_match_case(line, pattern)
     if not self:get_mode_status(consts.modes.case_sensitive) then
         line = string.lower(line)
         pattern = string.lower(pattern)
@@ -100,8 +100,8 @@ function finder_mode_manager:apply_match_case(line, pattern)
     return line, pattern
 end
 
-function finder_mode_manager:apply_regex_mode()
+function scout_mode_manager:apply_regex_mode()
     -- when set to false pattern matching is used when set to true only exact matches are shown...
     return not self:get_mode_status(consts.modes.lua_pattern)
 end
-return finder_mode_manager
+return scout_mode_manager

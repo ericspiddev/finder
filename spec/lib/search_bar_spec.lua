@@ -13,7 +13,7 @@ SEARCH_BAR_WIDTH_PERCENT = 0.25
 
 -- hepler functions
 function setup_search_tests()
-    utils:mock_debug_prints()
+    utils:mock_logger_prints()
     -- STUBS to mock out so we aren't hitting the real API
     stub(vim.api, "nvim_create_buf").returns(SEARCH_BAR_BUF_ID)
     stub(vim.api, "nvim_open_win").returns(SEARCH_BAR_WIN_ID)

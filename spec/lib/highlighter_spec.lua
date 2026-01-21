@@ -3,7 +3,6 @@ local stub = require('luassert.stub')
 local utils = require('spec.spec_utils')
 local consts = require('lib.consts')
 local mode_manager = require('lib.mode_manager')
-local search_mode = require('lib.search_mode')
 local match_object = require('lib.match')
 local assert_match = require('luassert.match')
 utils:register_global_logger()
@@ -69,12 +68,12 @@ end
 describe('highlighter', function ()
 
     before_each(function ()
-        utils:mock_debug_prints()
+        utils:mock_logger_prints()
         mock_out_highlights()
     end)
 
     after_each(function ()
-        utils:revert_debug_prints()
+        utils:revert_logger_prints()
         revert_highlights()
     end)
 

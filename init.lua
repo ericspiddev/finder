@@ -1,11 +1,11 @@
-package.path = package.path .. ";/home/ericspidle/.config/nvim/lua/plugins/custom/finder/?.lua"
+package.path = package.path .. ";/home/ericspidle/.config/nvim/lua/plugins/custom/nvim-scout/?.lua"
 local search_bar = require("lib.search_bar")
 local consts = require("lib.consts")
 local M = {}
 
 function M.setup(config)
 
-    _G.Finder_Logger = require("lib.finder_debug"):new(config.debug_level, vim.print, vim.notify)
+    _G.Scout_Logger = require("lib.scout_logger"):new(config.debug_level, vim.print, vim.notify)
     local search_bar_config = {
         relative='editor',
         row=0,
@@ -18,7 +18,7 @@ function M.setup(config)
         title="Search"
     }
 
-    Finder_Logger:debug_print("window: making a new window with config ", search_bar_config)
+    Scout_Logger:debug_print("window: making a new window with config ", search_bar_config)
 
     M.search_bar = search_bar:new(search_bar_config, config.width_percentage, true)
     M.search_bar.highlighter:populate_hl_context(consts.window.CURRENT_WINDOW)
@@ -35,7 +35,7 @@ function M.refocus_search()
     end
 end
 
-function M.resize_finder_window(ev)
+function M.resize_scout_window(ev)
     if vim.api.nvim_win_is_valid(M.search_bar.highlighter.hl_win) then
         local width = vim.api.nvim_win_get_width(M.search_bar.highlighter.hl_win)
         vim.api.nvim_win_call(M.search_bar.highlighter.hl_win, function()
@@ -44,7 +44,7 @@ function M.resize_finder_window(ev)
     end
 end
 
-function M.update_finder_context(ev)
+function M.update_scout_context(ev)
     local enterBuf = ev.buf
     if vim.api.nvim_buf_is_valid(enterBuf) and enterBuf ~= M.search_bar.query_buffer then
         M.search_bar.highlighter:update_hl_context(ev.buf, M.search_bar.query_buffer)
@@ -53,7 +53,7 @@ end
 
 function M.main()
     vim.api.nvim_create_autocmd({consts.events.WINDOW_RESIZED}, {
-        callback = M.resize_finder_window
+        callback = M.resize_scout_window
     })
     vim.api.nvim_create_autocmd({consts.events.WINDOW_LEAVE_EVENT}, {
         callback = function(ev)
@@ -63,7 +63,7 @@ function M.main()
         end
     })
     vim.api.nvim_create_autocmd({consts.events.BUFFER_ENTER}, {
-        callback = M.update_finder_context
+        callback = M.update_scout_context
     })
 
     vim.keymap.set('n', '/', M.toggle, {}) -- likely change for obvious reasons later

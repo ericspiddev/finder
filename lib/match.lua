@@ -1,7 +1,7 @@
-finder_match = {}
+scout_match = {}
 
-finder_match.__index = finder_match
-function finder_match:new(line, word_start, word_end, ext_mark_id)
+scout_match.__index = scout_match
+function scout_match:new(line, word_start, word_end, ext_mark_id)
     local obj = {
         row = line,
         m_start = word_start,
@@ -11,11 +11,11 @@ function finder_match:new(line, word_start, word_end, ext_mark_id)
     return setmetatable(obj, self)
 end
 
-function finder_match:get_cursor_row()
+function scout_match:get_cursor_row()
     return self.row
 end
 
-function finder_match:get_highlight_row()
+function scout_match:get_highlight_row()
     return self.row - 1
 end
 
@@ -25,9 +25,9 @@ end
 --- for bookkeeping and updating the match's highlighting
 --- new_id: extmark id that will be associated with the match
 ---
-function finder_match:update_extmark_id(new_id)
+function scout_match:update_extmark_id(new_id)
     self.extmark_id = new_id
 end
 
-return finder_match
+return scout_match
 

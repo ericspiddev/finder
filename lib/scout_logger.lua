@@ -1,71 +1,71 @@
-finder_debug = {}
-finder_debug.__index = finder_debug
+scout_logger = {}
+scout_logger.__index = scout_logger
 
-function finder_debug:new(debug_level, log_function, error_log_function)
-    obj = { debug_level = debug_level, log_function = log_function, error_log = error_log_function}
+function scout_logger:new(log_level, log_function, error_log_function)
+    obj = { log_level = log_level, log_function = log_function, error_log = error_log_function}
     return setmetatable(obj, self)
 end
-finder_debug.DEBUG_LEVELS = {DEBUG = 0, INFO = 1, WARNING = 2, ERROR = 3, OFF = 4}
+scout_logger.DEBUG_LEVELS = {DEBUG = 0, INFO = 1, WARNING = 2, ERROR = 3, OFF = 4}
 
 -------------------------------------------------------------
---- debug.debug_print: prints the message and optional variable
---- if the config debug level is set to DEBUG
+--- scout.scout.print: prints the message and optional variable
+--- if the config scout.level is set to DEBUG
 --- @msg: the message to print
 --- @variable: optional variable to print
 ---
-function finder_debug:debug_print(msg, variable)
-    self:finder_print(self.DEBUG_LEVELS.DEBUG, "[FINDER DBG]: ", msg, variable)
+function scout_logger:debug_print(msg, variable)
+    self:scout_print(self.DEBUG_LEVELS.DEBUG, "[SCOUT DBG]: ", msg, variable)
 end
 
 -------------------------------------------------------------
---- debug.info_print: prints the message and optional variable
---- only if the config debug level is set to INFO
+--- scout.info_print: prints the message and optional variable
+--- only if the config scout.level is set to INFO
 --- or less
 --- @msg: the message to print
 --- @variable: optional variable to print
 ---
-function finder_debug:info_print(msg, variable)
-    self:finder_print(self.DEBUG_LEVELS.INFO, "[FINDER INFO]: ", msg, variable)
+function scout_logger:info_print(msg, variable)
+    self:scout_print(self.DEBUG_LEVELS.INFO, "[SCOUT INFO]: ", msg, variable)
 end
 
 -------------------------------------------------------------
---- debug.warning_print: prints the message and optional variable
---- only if the config debug level is set to WARNING
+--- scout.warning_print: prints the message and optional variable
+--- only if the config scout.level is set to WARNING
 --- or less
 --- @msg: the message to print
 --- @variable: optional variable to print
 ---
-function finder_debug:warning_print(msg, variable)
-    self:finder_print(self.DEBUG_LEVELS.WARNING, "[FINDER WARN]: ", msg, variable)
+function scout_logger:warning_print(msg, variable)
+    self:scout_print(self.DEBUG_LEVELS.WARNING, "[SCOUT WARN]: ", msg, variable)
 end
 
 -------------------------------------------------------------
---- debug.error_print: prints the message and optional variable
+--- scout.error_print: prints the message and optional variable
 --- always as it's meant to be used to notify an error to the
 --- user
 --- or less
 --- @msg: the message to print
 --- @variable: optional variable to print
 ---
-function finder_debug:error_print(msg, variable)
-    self:finder_print(self.DEBUG_LEVELS.ERROR, "[FINDER ERR]: ", msg, variable)
+function scout_logger:error_print(msg, variable)
+    self:scout_print(self.DEBUG_LEVELS.ERROR, "[SCOUT ERR]: ", msg, variable)
 end
 
 -------------------------------------------------------------
---- debug.finder_print: prints the debug message with a prefix
---- after checking if the current debug level should print
+--- scout.scout_print: prints the scout.message with a prefix
+--- after checking if the current scout.level should print
 --- if the level is greater then the message will print. The
 --- passed in variable may be a table and will be inspected
 --- before printing automatically
---- @level: the debug level of the print message
+--- @level: the scout.level of the print message
 --- @prefix: prefix appended to the message before printing
 --- @msg: the message to print
 --- @variable: the variable to print
 ---
-function finder_debug:finder_print(level, prefix, msg, variable)
+function scout_logger:scout_print(level, prefix, msg, variable)
     variable = variable or {}
     local dbg_msg = prefix .. msg
-    if self:check_debug_level(level) then
+    if self:check_logger_level(level) then
         if type(variable) == 'table' then
             if next(variable) ~= nil then
                 dbg_msg = dbg_msg .. vim.inspect(variable)
@@ -91,12 +91,12 @@ function finder_debug:finder_print(level, prefix, msg, variable)
 end
 
 -------------------------------------------------------------
---- debug.check_debug_level: checks whether or not the debug
---- message should print based on the passed in debug level
+--- scout.check_scout.level: checks whether or not the debug
+--- message should print based on the passed in scout.level
 --- if the level is greater then the message will print
---- @level: level of debug to comapre against our set level
+--- @level: level of scout.to comapre against our set level
 ---
-function finder_debug:check_debug_level(level)
+function scout_logger:check_logger_level(level)
     if level == nil then
         vim.print("Nil level ignoring")
         return false
@@ -104,8 +104,8 @@ function finder_debug:check_debug_level(level)
         vim.print("Type is not number cannot compare")
         return false
     else
-        return level >= self.debug_level
+        return level >= self.log_level
     end
 end
 
-return finder_debug
+return scout_logger

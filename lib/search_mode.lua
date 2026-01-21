@@ -1,8 +1,8 @@
-finder_search_mode = {}
+scout_search_mode = {}
 local consts = require("lib.consts")
 
-finder_search_mode.__index = finder_search_mode
-function finder_search_mode:new(mode_name, mode_symbol, ns, mode_color)
+scout_search_mode.__index = scout_search_mode
+function scout_search_mode:new(mode_name, mode_symbol, ns, mode_color)
 
     local obj = {
         name = mode_name,
@@ -22,10 +22,10 @@ function create_mode_highlight(ns, mode_name, mode_color)
     if mode_color ~= nil and ns ~= nil and mode_name ~= "" then
         vim.api.nvim_set_hl(ns, mode_name, {fg = mode_color, italic= true, force = true})
     else
-        Finder_Logger:error_print("Nil argument passed to create_mode_highlight unable to for mode: ", mode_name)
+        Scout_Logger:error_print("Nil argument passed to create_mode_highlight unable to for mode: ", mode_name)
     end
 end
-function finder_search_mode:show_banner(display_col)
+function scout_search_mode:show_banner(display_col)
 
     if self.banner_window_id == consts.window.INVALID_WINDOW_ID and self.search_bar_win ~= consts.window.INVALID_WINDOW_ID then
         local banner_config = {
@@ -67,11 +67,11 @@ function get_mode_banner_border(hl_group)
     }
 end
 
-function finder_search_mode:get_banner_display_width()
+function scout_search_mode:get_banner_display_width()
     return  #self.name + consts.modes.padding_space
 end
 
-function finder_search_mode:hide_banner()
+function scout_search_mode:hide_banner()
     if self.banner_window_id ~= consts.window.INVALID_WINDOW_ID then
         local close_id = self.banner_window_id
         vim.api.nvim_win_close(close_id, false)
@@ -84,4 +84,4 @@ function finder_search_mode:hide_banner()
     end
 end
 
-return finder_search_mode
+return scout_search_mode

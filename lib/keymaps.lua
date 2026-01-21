@@ -1,9 +1,9 @@
-finder_keymaps = {}
+scout_keymaps = {}
 local consts = require("lib.consts")
 
-finder_keymaps.__index = finder_keymaps
+scout_keymaps.__index = scout_keymaps
 
-function finder_keymaps:new(search_bar)
+function scout_keymaps:new(search_bar)
     local obj = {
         search_bar = search_bar
     }
@@ -16,7 +16,7 @@ end
 --- called when the search bar is opened so all keybinds work
 --- while in the search buffer
 ---
-function finder_keymaps:setup_search_keymaps()
+function scout_keymaps:setup_search_keymaps()
     vim.keymap.set('n', 'n', function() self.search_bar:next_match() end, {
         buffer = self.search_bar.query_buffer,
         nowait = true,
@@ -41,7 +41,7 @@ function finder_keymaps:setup_search_keymaps()
         nowait = true})
 end
 
-function finder_keymaps:setup_history_keymaps()
+function scout_keymaps:setup_history_keymaps()
     vim.keymap.set('n', '<UP>', function() self.search_bar:next_history_entry() end, {
         buffer = self.search_bar.query_buffer,
         nowait = true,
@@ -53,7 +53,7 @@ function finder_keymaps:setup_history_keymaps()
         noremap = true})
 end
 
-function finder_keymaps:setup_mode_keymaps()
+function scout_keymaps:setup_mode_keymaps()
     vim.keymap.set('n', '<leader>c', function() self.search_bar.mode_manager:toggle_mode(consts.modes.case_sensitive) end, {
         buffer = self.search_bar.query_buffer,
         nowait = true,
@@ -69,33 +69,33 @@ end
 --- deleting all of the keymaps that get setup for the search
 --- window. It's important that
 ---
-function finder_keymaps:teardown_search_keymaps()
+function scout_keymaps:teardown_search_keymaps()
     vim.keymap.del('n', 'n', {buffer = self.search_bar.query_buffer })
     vim.keymap.del('n', 'N', {buffer = self.search_bar.query_buffer})
     vim.keymap.del('n', 'c', {buffer = self.search_bar.query_buffer})
     vim.keymap.del('n', '<leader>d', {buffer = self.search_bar.query_buffer})
 end
 
-function finder_keymaps:teardown_history_keymaps()
+function scout_keymaps:teardown_history_keymaps()
     vim.keymap.del('n', '<UP>', {buffer = self.search_bar.query_buffer })
     vim.keymap.del('n', '<DOWN>', {buffer = self.search_bar.query_buffer})
 end
 
-function finder_keymaps:teardown_mode_keymaps()
+function scout_keymaps:teardown_mode_keymaps()
     vim.keymap.del('n', '<leader>c', {buffer = self.search_bar.query_buffer})
     vim.keymap.del('n', '<leader>r', {buffer = self.search_bar.query_buffer})
 end
 
-function finder_keymaps:setup_finder_keymaps()
+function scout_keymaps:setup_scout_keymaps()
     self:setup_search_keymaps()
     self:setup_history_keymaps()
     self:setup_mode_keymaps()
 end
 
-function finder_keymaps:teardown_finder_keymaps()
+function scout_keymaps:teardown_scout_keymaps()
     self:teardown_search_keymaps()
     self:teardown_history_keymaps()
     self:teardown_mode_keymaps()
 end
 
-return finder_keymaps
+return scout_keymaps
