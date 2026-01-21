@@ -45,21 +45,21 @@ describe('search mode', function ()
         name = "Eric Mode"
         m = mode:new(name, "E", namespace_id, color)
         assert.stub(vim.api.nvim_set_hl).was_not.called_with(namespace_id, m.hl_name, {fg = color, force = true, italic = true})
-        utils:scout_print_was_called(logger.DEBUG_LEVELS.ERROR, "Nil argument passed to create_mode_highlight unable to for mode: ", m.hl_name)
+        utils:scout_print_was_called(logger.LOG_LEVELS.ERROR, "Nil argument passed to create_mode_highlight unable to for mode: ", m.hl_name)
 
         namespace_id = 0
         color = nil
         name = "Eric Mode"
         m = mode:new(name, "E", namespace_id, color)
         assert.stub(vim.api.nvim_set_hl).was_not.called_with(namespace_id, m.hl_name, {fg = color, force = true})
-        utils:scout_print_was_called(logger.DEBUG_LEVELS.ERROR, "Nil argument passed to create_mode_highlight unable to for mode: ", m.hl_name)
+        utils:scout_print_was_called(logger.LOG_LEVELS.ERROR, "Nil argument passed to create_mode_highlight unable to for mode: ", m.hl_name)
 
         namespace_id = 0
         color = "orange"
         name = nil
         m = mode:new(name, "E", namespace_id, color)
         assert.stub(vim.api.nvim_set_hl).was_not.called_with(namespace_id, m.hl_name, {fg = color, force = true})
-        utils:scout_print_was_called(logger.DEBUG_LEVELS.ERROR, "Nil argument passed to create_mode_highlight unable to for mode: ", '')
+        utils:scout_print_was_called(logger.LOG_LEVELS.ERROR, "Nil argument passed to create_mode_highlight unable to for mode: ", '')
 
         utils:revert_logger_prints()
     end)

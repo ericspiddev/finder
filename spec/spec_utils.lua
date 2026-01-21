@@ -53,13 +53,13 @@ function spec_utils:scout_print_was_called(level, message, var)
         assert(false)
     end
     local print_fn = nil
-    if level == logger.DEBUG_LEVELS.ERROR then
+    if level == logger.LOG_LEVELS.ERROR then
         print_fn = mock_logger.error_print
-    elseif level == logger.DEBUG_LEVELS.WARNING then
+    elseif level == logger.LOG_LEVELS.WARNING then
         print_fn = mock_logger.warning_print
-    elseif level == logger.DEBUG_LEVELS.INFO then
+    elseif level == logger.LOG_LEVELS.INFO then
         print_fn = mock_logger.info_print
-    elseif level == logger.DEBUG_LEVELS.DEBUG then
+    elseif level == logger.LOG_LEVELS.DEBUG then
         print_fn = mock_logger.debug_print
     else
         return
@@ -80,7 +80,7 @@ end
 
 function spec_utils:register_global_logger()
     if _G.Scout_Logger == nil then
-        _G.Scout_Logger = require("lib.scout_logger"):new(logger.DEBUG_LEVELS.OFF, vim.print)
+        _G.Scout_Logger = require("lib.scout_logger"):new(logger.LOG_LEVELS.OFF, vim.print)
     end
 end
 

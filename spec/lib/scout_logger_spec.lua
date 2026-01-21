@@ -1,7 +1,7 @@
 local logger = require('lib.scout_logger')
 local stub = require('luassert.stub')
 
-local levels = logger.DEBUG_LEVELS
+local levels = logger.LOG_LEVELS
 
 local stringify_table = function(table)
     return vim.inspect(table)

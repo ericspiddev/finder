@@ -5,7 +5,7 @@ function scout_logger:new(log_level, log_function, error_log_function)
     obj = { log_level = log_level, log_function = log_function, error_log = error_log_function}
     return setmetatable(obj, self)
 end
-scout_logger.DEBUG_LEVELS = {DEBUG = 0, INFO = 1, WARNING = 2, ERROR = 3, OFF = 4}
+scout_logger.LOG_LEVELS = {DEBUG = 0, INFO = 1, WARNING = 2, ERROR = 3, OFF = 4}
 
 -------------------------------------------------------------
 --- scout.scout.print: prints the message and optional variable
@@ -14,7 +14,7 @@ scout_logger.DEBUG_LEVELS = {DEBUG = 0, INFO = 1, WARNING = 2, ERROR = 3, OFF = 
 --- @variable: optional variable to print
 ---
 function scout_logger:debug_print(msg, variable)
-    self:scout_print(self.DEBUG_LEVELS.DEBUG, "[SCOUT DBG]: ", msg, variable)
+    self:scout_print(self.LOG_LEVELS.DEBUG, "[SCOUT DBG]: ", msg, variable)
 end
 
 -------------------------------------------------------------
@@ -25,7 +25,7 @@ end
 --- @variable: optional variable to print
 ---
 function scout_logger:info_print(msg, variable)
-    self:scout_print(self.DEBUG_LEVELS.INFO, "[SCOUT INFO]: ", msg, variable)
+    self:scout_print(self.LOG_LEVELS.INFO, "[SCOUT INFO]: ", msg, variable)
 end
 
 -------------------------------------------------------------
@@ -36,7 +36,7 @@ end
 --- @variable: optional variable to print
 ---
 function scout_logger:warning_print(msg, variable)
-    self:scout_print(self.DEBUG_LEVELS.WARNING, "[SCOUT WARN]: ", msg, variable)
+    self:scout_print(self.LOG_LEVELS.WARNING, "[SCOUT WARN]: ", msg, variable)
 end
 
 -------------------------------------------------------------
@@ -48,7 +48,7 @@ end
 --- @variable: optional variable to print
 ---
 function scout_logger:error_print(msg, variable)
-    self:scout_print(self.DEBUG_LEVELS.ERROR, "[SCOUT ERR]: ", msg, variable)
+    self:scout_print(self.LOG_LEVELS.ERROR, "[SCOUT ERR]: ", msg, variable)
 end
 
 -------------------------------------------------------------
@@ -81,7 +81,7 @@ function scout_logger:scout_print(level, prefix, msg, variable)
         elseif type(self.log_function) ~= 'function' then
             vim.print("Unable to print, internal log function is not a function type " .. type(self.log_function))
         else
-            if level ~= self.DEBUG_LEVELS.ERROR then
+            if level ~= self.LOG_LEVELS.ERROR then
                 self.log_function(dbg_msg)
             else
                 self.error_log(dbg_msg, vim.log.levels.ERROR) -- vim.notify

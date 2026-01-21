@@ -1,7 +1,7 @@
 local events = require('lib.events')
 local stub = require('luassert.stub')
 local utils = require('spec.spec_utils')
-local debug_levels = require('lib.scout_logger').DEBUG_LEVELS
+local log_levels = require('lib.scout_logger').LOG_LEVELS
 utils:register_global_logger()
 
 function create_event(valid_events)
@@ -45,17 +45,17 @@ describe('events', function()
 
         local test_events = create_event() -- nil valid_events table
         assert(not test_events:is_valid_event("on_lines"))
-        utils:scout_print_was_called(debug_levels.ERROR, "Nil valid events table no events will be allowed")
+        utils:scout_print_was_called(log_levels.ERROR, "Nil valid events table no events will be allowed")
         assert(not test_events:is_valid_event("test"))
-        utils:scout_print_was_called(debug_levels.ERROR, "Nil valid events table no events will be allowed")
+        utils:scout_print_was_called(log_levels.ERROR, "Nil valid events table no events will be allowed")
         assert(not test_events:is_valid_event("nonreal_event"))
-        utils:scout_print_was_called(debug_levels.ERROR, "Nil valid events table no events will be allowed")
+        utils:scout_print_was_called(log_levels.ERROR, "Nil valid events table no events will be allowed")
 
         test_events = create_event({}) -- empty valid events table
         assert(not test_events:is_valid_event("on_lines"))
-        utils:scout_print_was_called(debug_levels.ERROR, "Unsupported event ", "on_lines")
+        utils:scout_print_was_called(log_levels.ERROR, "Unsupported event ", "on_lines")
         assert(not test_events:is_valid_event(""))
-        utils:scout_print_was_called(debug_levels.ERROR, "Unsupported event ", "")
+        utils:scout_print_was_called(log_levels.ERROR, "Unsupported event ", "")
         assert(not test_events:is_valid_event())
 
         local fake_valid_events = {"on_lines", "test", "nonreal_event", "some_change_occurred"}
@@ -67,16 +67,16 @@ describe('events', function()
         assert(test_events:is_valid_event("some_change_occurred"))
 
         assert(not test_events:is_valid_event("s0me_change_occurred"))
-        utils:scout_print_was_called(debug_levels.ERROR, "Unsupported event ", "s0me_change_occurred")
+        utils:scout_print_was_called(log_levels.ERROR, "Unsupported event ", "s0me_change_occurred")
         assert(not test_events:is_valid_event("te3st"))
-        utils:scout_print_was_called(debug_levels.ERROR, "Unsupported event ", "te3st")
+        utils:scout_print_was_called(log_levels.ERROR, "Unsupported event ", "te3st")
         assert(not test_events:is_valid_event("idk"))
-        utils:scout_print_was_called(debug_levels.ERROR, "Unsupported event ", "idk")
+        utils:scout_print_was_called(log_levels.ERROR, "Unsupported event ", "idk")
         assert(not test_events:is_valid_event(""))
-        utils:scout_print_was_called(debug_levels.ERROR, "Unsupported event ", "")
+        utils:scout_print_was_called(log_levels.ERROR, "Unsupported event ", "")
         assert(not test_events:is_valid_event(nil))
         assert(not test_events:is_valid_event(20))
-        utils:scout_print_was_called(debug_levels.ERROR, "Unsupported event ", 20)
+        utils:scout_print_was_called(log_levels.ERROR, "Unsupported event ", 20)
         assert(not test_events:is_valid_event())
 
     end)
@@ -90,12 +90,12 @@ describe('events', function()
         }
         assert(not test_events:add_event("not_event", tab, "event_handler"))
         assert(test_events.event_table['not_event'] == nil)
-        utils:scout_print_was_called(debug_levels.ERROR, "Unsupported event supported events are ", fake_valid_events)
+        utils:scout_print_was_called(log_levels.ERROR, "Unsupported event supported events are ", fake_valid_events)
         assert(not test_events:add_event("fake_event", tab, "event_handler"))
-        utils:scout_print_was_called(debug_levels.ERROR, "Unsupported event supported events are ", fake_valid_events)
+        utils:scout_print_was_called(log_levels.ERROR, "Unsupported event supported events are ", fake_valid_events)
         assert(test_events.event_table['fake_event'] == nil)
         assert(not test_events:add_event("no_event", tab, "event_handler"))
-        utils:scout_print_was_called(debug_levels.ERROR, "Unsupported event supported events are ", fake_valid_events)
+        utils:scout_print_was_called(log_levels.ERROR, "Unsupported event supported events are ", fake_valid_events)
         assert(not test_events:add_event("fake_event", tab, "event_handler"))
         assert(test_events.event_table['no_event'] == nil)
         assert(not test_events:add_event("ano0ther_event", tab, "event_handler"))
@@ -117,7 +117,7 @@ describe('events', function()
         local tab = {}
         assert(not test_events:add_event("valid_event", tab, nil))
         assert(test_events.event_table['valid_event'] == nil)
-        utils:scout_print_was_called(debug_levels.ERROR, "Nil event handler for event ", "valid_event")
+        utils:scout_print_was_called(log_levels.ERROR, "Nil event handler for event ", "valid_event")
     end)
 
     it('does not register on a nil instance', function()
@@ -127,7 +127,7 @@ describe('events', function()
 
         assert(not test_events:add_event("valid_event", tab, "event_handler"))
         assert(test_events.event_table['valid_event'] == nil)
-        utils:scout_print_was_called(debug_levels.ERROR, "Nil object instance")
+        utils:scout_print_was_called(log_levels.ERROR, "Nil object instance")
     end)
 
     it('handles an invalid buffer when attaching events', function()
@@ -138,7 +138,7 @@ describe('events', function()
         local ATTACHES = true
         local test_events = create_event_for_buf_attach(fake_valid_events, INVALID_BUF, ADD_EVENTS, ATTACHES)
         assert(not test_events:attach_buffer_events(fake_buffer))
-        utils:scout_print_was_called(debug_levels.ERROR, "Cannot attach to invalid nvim buffer ", fake_buffer)
+        utils:scout_print_was_called(log_levels.ERROR, "Cannot attach to invalid nvim buffer ", fake_buffer)
     end)
 
     it('handles an empty event_table when attaching events', function()
@@ -150,13 +150,13 @@ describe('events', function()
         local test_events = create_event_for_buf_attach(fake_valid_events, VALID_BUF, NO_EVENTS, ATTACHES)
 
         assert(not test_events:attach_buffer_events(fake_buffer))
-        utils:scout_print_was_called(debug_levels.ERROR, "Failed to attach buffer events empty or nil event table!")
+        utils:scout_print_was_called(log_levels.ERROR, "Failed to attach buffer events empty or nil event table!")
 
         fake_valid_events = {}
         local EVENTS = true
         test_events = create_event_for_buf_attach(fake_valid_events, VALID_BUF, EVENTS, ATTACHES)
         assert(not test_events:attach_buffer_events(fake_buffer))
-        utils:scout_print_was_called(debug_levels.ERROR, "Failed to attach buffer events empty or nil event table!")
+        utils:scout_print_was_called(log_levels.ERROR, "Failed to attach buffer events empty or nil event table!")
 
     end)
 
@@ -169,7 +169,7 @@ describe('events', function()
         local test_events = create_event_for_buf_attach(fake_valid_events, VALID_BUF, EVENTS, DOES_ATTACH)
 
         assert(not test_events:attach_buffer_events(fake_buffer))
-        utils:scout_print_was_called(debug_levels.ERROR, "Failed to attach events to buffer ", fake_buffer)
+        utils:scout_print_was_called(log_levels.ERROR, "Failed to attach events to buffer ", fake_buffer)
     end)
 
     it('can attach events to a buffer', function()
@@ -181,7 +181,7 @@ describe('events', function()
         local test_events = create_event_for_buf_attach(fake_valid_events, VALID_BUF, EVENTS, ATTACHES)
 
         assert(test_events:attach_buffer_events(fake_buffer))
-        utils:scout_print_was_called(debug_levels.INFO, "Successfully attached buffer events")
+        utils:scout_print_was_called(log_levels.INFO, "Successfully attached buffer events")
     end)
 
 end)
