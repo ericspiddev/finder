@@ -1,5 +1,5 @@
 scout_mode_manager = {}
-local consts = require("lib.consts")
+local consts = require("nvim-scout.lib.consts")
 
 scout_mode_manager.__index = scout_mode_manager
 function scout_mode_manager:new(modes)

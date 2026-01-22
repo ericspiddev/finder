@@ -1,8 +1,8 @@
 scout_highlighter = {}
 scout_highlighter.__index = scout_highlighter
-local consts = require("lib.consts")
-local match_obj = require("lib.match")
-local pattern_handler = require("lib.pattern_handler"):new(consts.modes.escape_chars)
+local consts = require("nvim-scout.lib.consts")
+local match_obj = require("nvim-scout.lib.match")
+local pattern_handler = require("nvim-scout.lib.pattern_handler"):new(consts.modes.escape_chars)
 
 function scout_highlighter:new(editor_window, result_hl_style, selected_hl_style, hl_namespace, mode_mgr)
     local obj = {

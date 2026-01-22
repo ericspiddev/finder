@@ -1,5 +1,5 @@
 scout_keymaps = {}
-local consts = require("lib.consts")
+local consts = require("nvim-scout.lib.consts")
 
 scout_keymaps.__index = scout_keymaps
 

@@ -1,11 +1,10 @@
-package.path = package.path .. ";/home/ericspidle/.config/nvim/lua/plugins/custom/nvim-scout/?.lua"
-local search_bar = require("lib.search_bar")
-local consts = require("lib.consts")
+local search_bar = require("nvim-scout.lib.search_bar")
+local consts = require("nvim-scout.lib.consts")
 local M = {}
 
-function M.setup(config)
+function M.setup(user_options)
 
-    _G.Scout_Logger = require("lib.scout_logger"):new(config.log_level, vim.print, vim.notify)
+    _G.Scout_Logger = require("nvim-scout.lib.scout_logger"):new(user_options.log_level, vim.print, vim.notify)
     local search_bar_config = {
         relative='editor',
         row=0,
@@ -20,7 +19,7 @@ function M.setup(config)
 
     --Scout_Logger:debug_print("window: making a new window with config ", search_bar_config)
 
-    M.search_bar = search_bar:new(search_bar_config, config.width_percentage, true)
+    M.search_bar = search_bar:new(search_bar_config, user_options.width_percentage, true)
     M.search_bar.highlighter:populate_hl_context(consts.window.CURRENT_WINDOW)
     M.main()
 end

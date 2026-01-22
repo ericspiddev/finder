@@ -1,4 +1,4 @@
-local consts = require('lib.consts')
+local consts = require('nvim-scout.lib.consts')
 scout_events = {}
 
 scout_events.__index = scout_events

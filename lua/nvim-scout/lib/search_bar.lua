@@ -1,10 +1,10 @@
-local consts = require("lib.consts")
-local highlighter = require("lib.highlighter")
-local keymaps = require("lib.keymaps")
-local events = require("lib.events")
-local history = require("lib.history_manager")
-local mode_manager = require("lib.mode_manager")
-local search_mode = require("lib.search_mode")
+local consts = require("nvim-scout.lib.consts")
+local highlighter = require("nvim-scout.lib.highlighter")
+local keymaps = require("nvim-scout.lib.keymaps")
+local events = require("nvim-scout.lib.events")
+local history = require("nvim-scout.lib.history_manager")
+local mode_manager = require("nvim-scout.lib.mode_manager")
+local search_mode = require("nvim-scout.lib.search_mode")
 
 keymap_mgr = nil -- global varaible used to init the keymappings for the search bar
 scout_search_bar = {}
