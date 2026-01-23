@@ -1,8 +1,9 @@
 -- import the luassert.mock module
 local stub = require('luassert.stub')
-local consts = require('lib.consts')
-local search_bar_t = require('lib.search_bar')
+local consts = require('nvim-scout.lib.consts')
+local search_bar_t = require('nvim-scout.lib.search_bar')
 local utils = require('spec.spec_utils')
+local defaults = require('nvim-scout.lib.config').defaults
 utils:register_global_logger()
 
 -- test constants

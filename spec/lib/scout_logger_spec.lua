@@ -1,4 +1,4 @@
-local logger = require('lib.scout_logger')
+local logger = require('nvim-scout.lib.scout_logger')
 local stub = require('luassert.stub')
 
 local levels = logger.LOG_LEVELS

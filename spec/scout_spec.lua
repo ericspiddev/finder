@@ -1,5 +1,5 @@
 local stub = require('luassert.stub')
-local logger = require('lib.scout_logger')
+local logger = require('nvim-scout.lib.scout_logger')
 
 describe("Scout", function()
 
@@ -10,7 +10,7 @@ describe("Scout", function()
             width_percentage = 0.15
         }
 
-        local test_scout = require("init")
+        local test_scout = require("nvim-scout.init")
         test_scout.setup(test_scout_config)
         test_scout.search_bar:open()
         assert.equals(test_scout.search_bar.query_win_config.width, math.floor(250 * 0.15))

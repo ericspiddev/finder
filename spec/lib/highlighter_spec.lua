@@ -1,9 +1,9 @@
-local highlight = require('lib.highlighter')
+local highlight = require('nvim-scout.lib.highlighter')
 local stub = require('luassert.stub')
 local utils = require('spec.spec_utils')
-local consts = require('lib.consts')
-local mode_manager = require('lib.mode_manager')
-local match_object = require('lib.match')
+local consts = require('nvim-scout.lib.consts')
+local mode_manager = require('nvim-scout.lib.mode_manager')
+local match_object = require('nvim-scout.lib.match')
 local assert_match = require('luassert.match')
 utils:register_global_logger()
 

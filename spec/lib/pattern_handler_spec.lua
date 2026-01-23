@@ -1,5 +1,5 @@
-local pattern_handler = require('lib.pattern_handler')
-local consts = require('lib.consts')
+local pattern_handler = require('nvim-scout.lib.pattern_handler')
+local consts = require('nvim-scout.lib.consts')
 
 local escape_chars = consts.modes.escape_chars
 

@@ -1,8 +1,8 @@
-local logger = require('lib.scout_logger')
+local logger = require('nvim-scout.lib.scout_logger')
 local mock = require('luassert.mock')
 local match = require('luassert.match')
-local consts = require('lib.consts')
-local search_mode = require('lib.search_mode')
+local consts = require('nvim-scout.lib.consts')
+local search_mode = require('nvim-scout.lib.search_mode')
 spec_utils = {}
 
 spec_utils.__index = spec_utils
@@ -80,7 +80,7 @@ end
 
 function spec_utils:register_global_logger()
     if _G.Scout_Logger == nil then
-        _G.Scout_Logger = require("lib.scout_logger"):new(logger.LOG_LEVELS.OFF, vim.print)
+        _G.Scout_Logger = logger:new(logger.LOG_LEVELS.OFF, vim.print)
     end
 end
 
