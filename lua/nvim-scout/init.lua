@@ -1,10 +1,11 @@
 local search_bar = require("nvim-scout.lib.search_bar")
 local consts = require("nvim-scout.lib.consts")
+local config_parser = require("nvim-scout.lib.config_parser")
 local M = {}
 
 function M.setup(user_options)
-
-    _G.Scout_Logger = require("nvim-scout.lib.scout_logger"):new(user_options.log_level, vim.print, vim.notify)
+    local scout_config = config_parser:new(user_options):parse_config() -- hmm think about how to use logger maybe print directly?
+    _G.Scout_Logger = require("nvim-scout.lib.scout_logger"):new(scout_config.logging, vim.print, vim.notify)
     local search_bar_config = {
         relative='editor',
         row=0,
@@ -16,12 +17,12 @@ function M.setup(user_options)
         title_pos="center",
         title="Search"
     }
-
     --Scout_Logger:debug_print("window: making a new window with config ", search_bar_config)
 
-    M.search_bar = search_bar:new(search_bar_config, user_options.width_percentage, true)
+
+    M.search_bar = search_bar:new(search_bar_config, scout_config)
     M.search_bar.highlighter:populate_hl_context(consts.window.CURRENT_WINDOW)
-    M.main()
+    M.main(scout_config.keymaps)
 end
 
 function M.toggle()
@@ -50,7 +51,7 @@ function M.update_scout_context(ev)
     end
 end
 
-function M.main()
+function M.main(keymap_conf)
     vim.api.nvim_create_autocmd({consts.events.WINDOW_RESIZED}, {
         callback = M.resize_scout_window
     })
@@ -65,7 +66,7 @@ function M.main()
         callback = M.update_scout_context
     })
 
-    vim.keymap.set('n', '/', M.toggle, {}) -- likely change for obvious reasons later
-    vim.keymap.set('n', 'f', M.refocus_search, {})
+    vim.keymap.set('n', keymap_conf.toggle_search, M.toggle, {}) -- likely change for obvious reasons later
+    vim.keymap.set('n', keymap_conf.focus_search, M.refocus_search, {})
 end
 return M

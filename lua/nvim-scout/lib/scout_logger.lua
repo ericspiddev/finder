@@ -1,8 +1,8 @@
 scout_logger = {}
 scout_logger.__index = scout_logger
 
-function scout_logger:new(log_level, log_function, error_log_function)
-    obj = { log_level = log_level, log_function = log_function, error_log = error_log_function}
+function scout_logger:new(log_conf, log_function, error_log_function)
+    obj = { log_level = log_conf.level, log_function = log_function, error_log = error_log_function}
     return setmetatable(obj, self)
 end
 scout_logger.LOG_LEVELS = {DEBUG = 0, INFO = 1, WARNING = 2, ERROR = 3, OFF = 4}

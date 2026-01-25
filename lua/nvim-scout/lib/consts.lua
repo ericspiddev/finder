@@ -31,6 +31,7 @@
      search = {
         FORWARD = 1,
         BACKWARD = -1,
+        search_name = "[SCOUT]",
         max_results = 10001
      },
      lines = {
@@ -51,7 +52,15 @@
          case_sensitive_color = "#F18A85",
          pattern_color = "#007FFF",
          padding_space = 2,
-     }
+     },
+     sizes = {
+         xs = 0.15,
+         small = 0.20,
+         medium = 0.25,
+         large = 0.30,
+         xl = 0.50,
+         full = 1.0
+     },
  }
 
  return constants

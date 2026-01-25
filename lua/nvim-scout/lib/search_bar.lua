@@ -14,15 +14,15 @@ scout_search_bar.VALID_WINDOW_EVENTS = {"on_lines", "on_bytes", "on_changedtick"
 scout_search_bar.MIN_WIDTH = 0.10
 scout_search_bar.MAX_WIDTH = 1
 
-function scout_search_bar:new(window_config, width_percent, should_enter)
+function scout_search_bar:new(window_config, scout_config)
     local current_editing_win = vim.api.nvim_get_current_win()
     local namespace = vim.api.nvim_create_namespace(consts.highlight.SCOUT_NAMESPACE)
     local mode_mgr = mode_manager:new(create_search_bar_modes(namespace))
     local obj = {
         query_buffer = consts.buffer.INVALID_BUFFER,
         query_win_config = window_config,
-        width_percent = width_percent,
-        should_enter = should_enter or true,
+        width_percent = scout_config.search.size,
+        should_enter = true,
         send_buffer = false, -- unused since we use lua cbs
         mode_manager = mode_mgr,
         highlighter = highlighter:new(current_editing_win, consts.highlight.MATCH_HIGHLIGHT, consts.highlight.CURR_MATCH_HIGHLIGHT, namespace, mode_mgr),
@@ -30,8 +30,9 @@ function scout_search_bar:new(window_config, width_percent, should_enter)
         history = history:new(consts.history.MAX_ENTRIES),
         win_id = consts.window.INVALID_WINDOW_ID,
     }
+    vim.print("Width size is " .. obj.width_percent)
     t = setmetatable(obj, self)
-    keymap_mgr = keymaps:new(t)
+    keymap_mgr = keymaps:new(t, scout_config.keymaps)
     return t
 end
 
@@ -139,6 +140,7 @@ function scout_search_bar:open()
         self.query_win_config.width = math.floor(vim.api.nvim_win_get_width(window) * self.width_percent)
         self.query_win_config.col = vim.api.nvim_win_get_width(window)
         self.win_id = vim.api.nvim_open_win(self.query_buffer, self.should_enter, self.query_win_config)
+        vim.api.nvim_buf_set_name(self.query_buffer, consts.search.search_name)
 
         self.mode_manager:update_relative_window(self.win_id)
         if self.highlighter.hl_context == consts.buffer.NO_CONTEXT then

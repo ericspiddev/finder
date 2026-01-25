@@ -10,7 +10,10 @@ end
 function create_scout_logger(level, print_func, error_func)
     print_func = print_func or vim.print
     error_func = error_func or vim.notify
-    return logger:new(level, print_func, error_func)
+    log_config = {
+        level = level
+    }
+    return logger:new(log_config, print_func, error_func)
 end
 
 describe('logger', function()

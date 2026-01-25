@@ -3,7 +3,7 @@ local stub = require('luassert.stub')
 local consts = require('nvim-scout.lib.consts')
 local search_bar_t = require('nvim-scout.lib.search_bar')
 local utils = require('spec.spec_utils')
-local defaults = require('nvim-scout.lib.config').defaults
+local default_conf = require('nvim-scout.lib.config').defaults
 utils:register_global_logger()
 
 -- test constants
@@ -40,11 +40,13 @@ function closed_asserts(search)
     assert.equals(search:is_open(), false)
 end
 
+
 describe("Search bar", function()
 
     setup_search_tests()
 
-    local search_bar = search_bar_t:new({}, SEARCH_BAR_WIDTH_PERCENT, true)
+    default_conf.search.size = 0.15
+    local search_bar = search_bar_t:new({}, default_conf)
 
     before_each(function()
         search_bar:close()
@@ -84,9 +86,9 @@ describe("Search bar", function()
         closed_asserts(search_bar)
     end)
 
-    it('properly calculates width percentage ', function()
+    it('properly calculates width percentage based on config size', function()
         search_bar:open()
-        assert.equals(search_bar.query_win_config.width, SEARCH_BAR_WINDOW_WIDTH * SEARCH_BAR_WIDTH_PERCENT)
+        assert.equals(search_bar.query_win_config.width, SEARCH_BAR_WINDOW_WIDTH * consts.sizes.xs)
     end)
 
     it('properly moves the window over based on the new column', function()
@@ -99,9 +101,9 @@ describe("Search bar", function()
 
         search_bar:open()
         search_bar:move_window(250)
-        assert.equals(search_bar.query_win_config.col, 224)
+        assert.equals(search_bar.query_win_config.col, 234)
         search_bar:move_window(300)
-        assert.equals(search_bar.query_win_config.col, 274)
+        assert.equals(search_bar.query_win_config.col, 284)
     end)
 
     it('toggles correctly', function()

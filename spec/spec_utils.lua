@@ -45,8 +45,35 @@ function spec_utils:lists_are_equal(t1, t2)
             return false
         end
     end
+
     return true
 end
+
+function spec_utils:tables_are_equal(t1, t2)
+    local are_equal = true
+    for key, _ in pairs(t1) do
+        if type(t1[key]) == 'table' then
+            self:tables_are_equal(t1[key], t2[key])
+        end
+        if t1[key] ~= t2[key] then
+            are_equal = false
+        end
+    end
+
+    for key, _ in pairs(t2) do
+        if t2[key] ~= t1[key] then
+            are_equal = false
+        end
+    end
+
+    if not are_equal then
+        vim.print("Table 1 is " .. vim.inspect(t1))
+        vim.print("Table 2 is " .. vim.inspect(t2))
+    end
+
+    return are_equal
+end
+
 
 function spec_utils:scout_print_was_called(level, message, var)
     if mock_logger == nil then
@@ -80,7 +107,7 @@ end
 
 function spec_utils:register_global_logger()
     if _G.Scout_Logger == nil then
-        _G.Scout_Logger = logger:new(logger.LOG_LEVELS.OFF, vim.print)
+        _G.Scout_Logger = logger:new({level = logger.LOG_LEVELS.OFF}, vim.print)
     end
 end
 

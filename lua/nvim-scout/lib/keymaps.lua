@@ -3,9 +3,10 @@ local consts = require("nvim-scout.lib.consts")
 
 scout_keymaps.__index = scout_keymaps
 
-function scout_keymaps:new(search_bar)
+function scout_keymaps:new(search_bar, keymaps_config)
     local obj = {
-        search_bar = search_bar
+        search_bar = search_bar,
+        keymaps = keymaps_config
     }
     return setmetatable(obj, self)
 end
@@ -17,48 +18,38 @@ end
 --- while in the search buffer
 ---
 function scout_keymaps:setup_search_keymaps()
-    vim.keymap.set('n', 'n', function() self.search_bar:next_match() end, {
+    vim.keymap.set('n', self.keymaps.prev_result, function() self.search_bar:previous_match() end, {
         buffer = self.search_bar.query_buffer,
         nowait = true,
         noremap = true})
-
-    vim.keymap.set('n', 'N', function() self.search_bar:previous_match() end, {
+    vim.keymap.set('n', self.keymaps.next_result, function() self.search_bar:next_match() end, {
         buffer = self.search_bar.query_buffer,
         nowait = true,
         noremap = true})
-    vim.keymap.set('n', 'c', function() self.search_bar:clear_search() end, {
+    vim.keymap.set('n', self.keymaps.clear_search, function() self.search_bar:clear_search() end, {
         buffer = self.search_bar.query_buffer,
-        nowait = true,
+        nowait= true,
         noremap = true})
-
-    vim.keymap.set('n', '<leader>c', function() self.search_bar:toggle_case_sensitivity() end, {
-        buffer = self.search_bar.query_buffer,
-        nowait = true,
-        noremap = true})
-
-    vim.keymap.set('n', '<leader>d', function() self.search_bar.highlighter:dump_context() end, {
-        buffer = self.search_bar.query_buffer,
-        nowait = true})
 end
 
 function scout_keymaps:setup_history_keymaps()
-    vim.keymap.set('n', '<UP>', function() self.search_bar:next_history_entry() end, {
+    vim.keymap.set('n', self.keymaps.next_history, function() self.search_bar:next_history_entry() end, {
         buffer = self.search_bar.query_buffer,
         nowait = true,
         noremap = true})
 
-    vim.keymap.set('n', '<DOWN>', function() self.search_bar:previous_history_entry() end, {
+    vim.keymap.set('n', self.keymaps.prev_history, function() self.search_bar:previous_history_entry() end, {
         buffer = self.search_bar.query_buffer,
         nowait = true,
         noremap = true})
 end
 
 function scout_keymaps:setup_mode_keymaps()
-    vim.keymap.set('n', '<leader>c', function() self.search_bar.mode_manager:toggle_mode(consts.modes.case_sensitive) end, {
+    vim.keymap.set('n', self.keymaps.case_sensitive_toggle, function() self.search_bar.mode_manager:toggle_mode(consts.modes.case_sensitive) end, {
         buffer = self.search_bar.query_buffer,
         nowait = true,
         noremap = true})
-    vim.keymap.set('n', '<leader>r', function() self.search_bar.mode_manager:toggle_mode(consts.modes.lua_pattern) end, {
+    vim.keymap.set('n', self.keymaps.pattern_toggle, function() self.search_bar.mode_manager:toggle_mode(consts.modes.lua_pattern) end, {
         buffer = self.search_bar.query_buffer,
         nowait = true,
         noremap = true})
@@ -70,20 +61,19 @@ end
 --- window. It's important that
 ---
 function scout_keymaps:teardown_search_keymaps()
-    vim.keymap.del('n', 'n', {buffer = self.search_bar.query_buffer })
-    vim.keymap.del('n', 'N', {buffer = self.search_bar.query_buffer})
-    vim.keymap.del('n', 'c', {buffer = self.search_bar.query_buffer})
-    vim.keymap.del('n', '<leader>d', {buffer = self.search_bar.query_buffer})
+    vim.keymap.del('n', self.keymaps.next_result, {buffer = self.search_bar.query_buffer })
+    vim.keymap.del('n', self.keymaps.prev_result, {buffer = self.search_bar.query_buffer})
+    vim.keymap.del('n', self.keymaps.clear_search, {buffer = self.search_bar.query_buffer})
 end
 
 function scout_keymaps:teardown_history_keymaps()
-    vim.keymap.del('n', '<UP>', {buffer = self.search_bar.query_buffer })
-    vim.keymap.del('n', '<DOWN>', {buffer = self.search_bar.query_buffer})
+    vim.keymap.del('n', self.keymaps.prev_history, {buffer = self.search_bar.query_buffer })
+    vim.keymap.del('n', self.keymaps.next_history, {buffer = self.search_bar.query_buffer})
 end
 
 function scout_keymaps:teardown_mode_keymaps()
-    vim.keymap.del('n', '<leader>c', {buffer = self.search_bar.query_buffer})
-    vim.keymap.del('n', '<leader>r', {buffer = self.search_bar.query_buffer})
+    vim.keymap.del('n', self.keymaps.case_sensitive_toggle, {buffer = self.search_bar.query_buffer})
+    vim.keymap.del('n', self.keymaps.pattern_toggle, {buffer = self.search_bar.query_buffer})
 end
 
 function scout_keymaps:setup_scout_keymaps()
