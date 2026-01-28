@@ -29,6 +29,7 @@ function scout_search_bar:new(window_config, scout_config)
         search_events = nil,
         history = history:new(consts.history.MAX_ENTRIES),
         win_id = consts.window.INVALID_WINDOW_ID,
+        host_window = consts.window.INVALID_WINDOW_ID,
     }
     vim.print("Width size is " .. obj.width_percent)
     t = setmetatable(obj, self)
@@ -134,7 +135,7 @@ function scout_search_bar:open()
         if config.relative ~= "" then
             return
         end
-        self.search_window = window
+        self.host_window = window
         self.width_percent = self:cap_width(self.width_percent)
         self.query_buffer = vim.api.nvim_create_buf(consts.buffer.LIST_BUFFER, consts.buffer.SCRATCH_BUFFER)
         self.query_win_config.width = math.floor(vim.api.nvim_win_get_width(window) * self.width_percent)
@@ -166,6 +167,7 @@ function scout_search_bar:close()
     if self:is_open() then
         close_id = self.win_id
         self.win_id = consts.window.INVALID_WINDOW_ID
+        self.host_window = consts.window.INVALID_WINDOW_ID
         Scout_Logger:debug_print("Closing open window")
 
         keymap_mgr:teardown_search_keymaps()

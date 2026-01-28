@@ -36,9 +36,9 @@ function M.refocus_search()
 end
 
 function M.resize_scout_window(ev)
-    if vim.api.nvim_win_is_valid(M.search_bar.highlighter.hl_win) then
-        local width = vim.api.nvim_win_get_width(M.search_bar.highlighter.hl_win)
-        vim.api.nvim_win_call(M.search_bar.highlighter.hl_win, function()
+    if vim.api.nvim_win_is_valid(M.search_bar.host_window) then
+        local width = vim.api.nvim_win_get_width(M.search_bar.host_window)
+        vim.api.nvim_win_call(M.search_bar.host_window, function()
             M.search_bar:move_window(width)
         end)
     end
