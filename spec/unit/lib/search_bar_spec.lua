@@ -10,7 +10,6 @@ utils:register_global_logger()
 SEARCH_BAR_BUF_ID = 1
 SEARCH_BAR_WIN_ID = 1005
 SEARCH_BAR_WINDOW_WIDTH = 100
-SEARCH_BAR_WIDTH_PERCENT = 0.25
 
 -- hepler functions
 function setup_search_tests()
@@ -24,29 +23,44 @@ function setup_search_tests()
     stub(vim.api, "nvim_buf_get_lines").returns({"first", "second", "third"})
     stub(vim.api, "nvim_win_get_width").returns(SEARCH_BAR_WINDOW_WIDTH)
     stub(vim.api, "nvim_win_set_config").returns()
+    stub(vim.api, "nvim_get_current_win").returns(0)
     stub(vim.keymap, "set").returns()
     stub(vim.keymap, "del").returns()
+end
+
+function teardown_search_stubs()
+    vim.api.nvim_create_buf:revert()
+    vim.api.nvim_open_win:revert()
+    vim.api.nvim_buf_attach:revert()
+    vim.api.nvim_buf_delete:revert()
+    vim.api.nvim_win_close:revert()
+    vim.api.nvim_buf_get_lines:revert()
+    vim.api.nvim_win_get_width:revert()
+    vim.api.nvim_win_set_config:revert()
+    vim.keymap.set:revert()
+    vim.keymap.del:revert()
 end
 
 function open_asserts(search)
     assert.equals(search.query_buffer, SEARCH_BAR_BUF_ID)
     assert.equals(search.win_id, SEARCH_BAR_WIN_ID)
+    assert.equals(search.host_window, 0)
+    assert.equals(search.query_win_config.col, SEARCH_BAR_WINDOW_WIDTH)
     assert.equals(search:is_open(), true)
 end
 
 function closed_asserts(search)
     assert.equals(search.query_buffer, consts.buffer.INVALID_BUFFER)
     assert.equals(search.win_id, consts.window.INVALID_WINDOW_ID)
+    assert.equals(search.host_window, consts.window.INVALID_WINDOW_ID)
     assert.equals(search:is_open(), false)
 end
 
-
 describe("Search bar", function()
-
-    setup_search_tests()
 
     default_conf.search.size = 0.15
     local search_bar = search_bar_t:new({}, default_conf)
+    setup_search_tests()
 
     before_each(function()
         search_bar:close()
@@ -55,6 +69,7 @@ describe("Search bar", function()
     it('can open a search window and assign it a valid ID', function()
         search_bar:open()
         open_asserts(search_bar)
+
     end)
 
     it('properly reports when it is open and closed', function()
@@ -87,8 +102,16 @@ describe("Search bar", function()
     end)
 
     it('properly calculates width percentage based on config size', function()
-        search_bar:open()
-        assert.equals(search_bar.query_win_config.width, SEARCH_BAR_WINDOW_WIDTH * consts.sizes.xs)
+
+        local width_test_bar = {}
+        for _, size in pairs(consts.sizes) do
+            default_conf.search.size = size
+            width_test_bar = search_bar_t:new({}, default_conf)
+            width_test_bar:open()
+            assert.equals(width_test_bar.query_win_config.width, SEARCH_BAR_WINDOW_WIDTH * default_conf.search.size)
+            width_test_bar:close()
+        end
+
     end)
 
     it('properly moves the window over based on the new column', function()
@@ -127,5 +150,7 @@ describe("Search bar", function()
     it('gets the first result of the buffer only', function ()
         assert.equals("first", search_bar:get_window_contents())
     end)
+
+    teardown_search_stubs()
 
 end)

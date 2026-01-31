@@ -8,6 +8,24 @@ spec_utils = {}
 spec_utils.__index = spec_utils
 local mock_logger = nil
 
+function spec_utils:emulate_user_typing(string)
+    vim.api.nvim_feedkeys('i' .. string, "tx", true)
+end
+function spec_utils:emulate_user_keypress(key)
+    vim.api.nvim_feedkeys(key, "x", true)
+end
+
+function spec_utils:open_test_buffer(filename)
+
+    local file_path = vim.fn.getcwd() .. "/spec/test_buffers/" .. filename
+    vim.cmd('buffer '.. file_path)
+end
+
+function spec_utils:keycodes_user_keypress(keycode_key)
+    local keycode = vim.api.nvim_replace_termcodes(keycode_key, true, false, true) -- check these params....
+    vim.api.nvim_feedkeys(keycode, "x", false)
+end
+
 function spec_utils:compare_matches(m1, m2)
     if not (m1.row == m2.row and
             m1.m_start == m2.m_start and
