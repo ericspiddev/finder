@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: Finder Unit Tests
+name: Nvim-Scout Tests
 
 # Controls when the workflow will run
 on:
@@ -41,10 +41,20 @@ jobs:
           cd ~/.config/nvim/pack/vendor/start
           git clone https://github.com/nvim-lua/plenary.nvim.git
 
-      - name: Run plenary tests
+      - name: Run functional tests
         run: |
           export PATH="$PATH:/opt/nvim-linux-x86_64/bin"
           cd $GITHUB_WORKSPACE
-          which nvim
-          nvim -version
-          nvim --headless -c 'PlenaryBustedDirectory spec'
+          ./scout_test_runner.sh -f
+
+      - name: Run unit tests
+        run: |
+          export PATH="$PATH:/opt/nvim-linux-x86_64/bin"
+          cd $GITHUB_WORKSPACE
+          ./scout_test_runner.sh -u
+
+      - name: Run all tests
+        run: |
+          export PATH="$PATH:/opt/nvim-linux-x86_64/bin"
+          cd $GITHUB_WORKSPACE
+          ./scout_test_runner.sh -a
