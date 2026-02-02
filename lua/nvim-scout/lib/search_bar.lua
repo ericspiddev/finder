@@ -31,7 +31,6 @@ function scout_search_bar:new(window_config, scout_config)
         win_id = consts.window.INVALID_WINDOW_ID,
         host_window = consts.window.INVALID_WINDOW_ID,
     }
-    vim.print("Width size is " .. obj.width_percent)
     t = setmetatable(obj, self)
     keymap_mgr = keymaps:new(t, scout_config.keymaps)
     return t
