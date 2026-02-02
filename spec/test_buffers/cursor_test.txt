@@ -1,0 +1,4 @@
+first string on one line cursor
+second string on cursor another line
+can the cursor follow to this string
+will the cursor go back to the top string after this?

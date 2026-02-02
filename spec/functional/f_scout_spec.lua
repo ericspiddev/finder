@@ -47,6 +47,11 @@ describe('Functional: Scout ', function ()
         test_global_keymaps("T", "H", scout)
     end)
 
+    -- it('moves the scout window over if a split view is used', function ()
+    --     --- TODO!
+    --     assert(false)
+    -- end)
+
 end)
 
 

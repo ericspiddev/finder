@@ -15,10 +15,33 @@ function spec_utils:emulate_user_keypress(key)
     vim.api.nvim_feedkeys(key, "x", true)
 end
 
-function spec_utils:open_test_buffer(filename)
+function spec_utils:async_asserts(delay, async_asserts, ...)
+    local co = coroutine.running()
+    vim.defer_fn(function ()
+        coroutine.resume(co)
+    end, delay)
+    coroutine.yield()
+    async_asserts(...)
+end
 
-    local file_path = vim.fn.getcwd() .. "/spec/test_buffers/" .. filename
-    vim.cmd('buffer '.. file_path)
+function spec_utils:test_buffer_to_table(filename)
+    local file_path = vim.fn.expand("spec/test_buffers/" .. filename)
+    local lines = {}
+    local f = assert(io.open(file_path, "r"))
+    local line = f:read()
+    while line do
+        table.insert(lines, line)
+        line = f:read()
+    end
+
+    f:close()
+    return lines
+end
+
+function spec_utils:open_test_buffer(filename)
+    local file_path = vim.fn.expand("spec/test_buffers/" .. filename)
+    local f = assert(io.open(file_path, "r"))
+    vim.cmd.edit(file_path)
 end
 
 function spec_utils:keycodes_user_keypress(keycode_key)

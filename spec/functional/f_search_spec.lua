@@ -73,5 +73,4 @@ describe('Functional: Search bar', function()
         assert.equals(scout.search_bar:get_window_contents(), "")
     end)
 
-
 end)

@@ -1,5 +1,7 @@
+#!/bin/bash
+
 TEST_SUITE=$1
-NVIM_TEST_COMMAND="nvim --headless -c "
+NVIM_TEST_COMMAND="nvim --headless -n -c "
 GROUP_TEST_ARG="'PlenaryBustedDirectory  "
 SINGLE_TEST_ARG="'PlenaryBustedFile  "
 TEST_DIR=$(pwd)

@@ -3,6 +3,9 @@
         INVALID_WINDOW_ID = -1,
         CURRENT_WINDOW = 0,
      },
+     test = {
+         async_delay = 10,
+     },
      events = {
         WINDOW_ENTER_EVENT = "WinEnter",
         WINDOW_LEAVE_EVENT = "WinLeave",
