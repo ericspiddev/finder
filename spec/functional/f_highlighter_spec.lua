@@ -2,17 +2,11 @@ local scout = require('nvim-scout.init')
 local utils = require('spec.spec_utils')
 local consts = require('nvim-scout.lib.consts')
 local def_keymaps = require('nvim-scout.lib.config').defaults.keymaps
+local func_helpers = require('spec.functional.f_spec_helpers')
 
 function open_buffer_asserts(hl, buffer)
     utils:open_test_buffer(buffer)
     assert.same(hl.hl_context, utils:test_buffer_to_table(buffer))
-end
-
-function reset_open_buf(buffer)
-    utils:emulate_user_keypress(def_keymaps.clear_search)
-    utils:keycodes_user_keypress("<C-w>h") -- switch out of window
-    utils:open_test_buffer(buffer)
-    utils:emulate_user_keypress(def_keymaps.focus_search)
 end
 
 local async_match_check = function (...)
@@ -126,13 +120,13 @@ describe('Functional: Highlighter', function ()
         utils:emulate_user_keypress(def_keymaps.clear_search)
 
         test_buf = "js_buffer.js"
-        reset_open_buf(test_buf)
+        func_helpers:reset_open_buf(test_buf)
         utils:emulate_user_typing("node")
         expected_matches = 20
         utils:async_asserts(consts.test.async_delay, async_match_check, hl, expected_matches)
 
         test_buf = "lua_buffer.lua"
-        reset_open_buf(test_buf)
+        func_helpers:reset_open_buf(test_buf)
         utils:emulate_user_typing("luatestapp")
         expected_matches = 1
         utils:async_asserts(consts.test.async_delay, async_match_check, hl, expected_matches)
@@ -232,13 +226,13 @@ describe('Functional: Highlighter', function ()
         utils:async_asserts(consts.test.async_delay, async_extmark_assert, hl)
 
         test_buf = "js_buffer.js"
-        reset_open_buf(test_buf)
+        func_helpers:reset_open_buf(test_buf)
         utils:emulate_user_typing("doubled")
 
         utils:async_asserts(consts.test.async_delay, async_extmark_assert, hl)
 
         test_buf = "lua_buffer.lua"
-        reset_open_buf(test_buf)
+        func_helpers:reset_open_buf(test_buf)
         utils:emulate_user_typing("coroutine")
         utils:async_asserts(consts.test.async_delay, async_extmark_assert, hl)
     end)
@@ -259,7 +253,7 @@ describe('Functional: Highlighter', function ()
         utils:async_asserts(consts.test.async_delay, async_check_selected_hl, hl, 12, def_keymaps.prev_result)
 
         test_buf = "js_buffer.js"
-        reset_open_buf(test_buf)
+        func_helpers:reset_open_buf(test_buf)
         utils:emulate_user_typing("function")
         utils:async_asserts(consts.test.async_delay, async_check_selected_hl, hl, 1, def_keymaps.next_result)
         utils:async_asserts(consts.test.async_delay, async_check_selected_hl, hl, 2, def_keymaps.next_result)

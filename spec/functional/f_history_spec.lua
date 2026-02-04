@@ -3,6 +3,7 @@ local consts = require('nvim-scout.lib.consts')
 local default_conf = require('nvim-scout.lib.config').defaults
 local utils = require('spec.spec_utils')
 local def_keymaps = default_conf.keymaps
+local func_helpers = require('spec.functional.f_spec_helpers')
 
 local async_check_added_entry = function (...)
     local history, search, expected_count = ...
@@ -39,27 +40,6 @@ local async_check_same_search = function(...)
     assert.equals(#history.entries, unc_entries)
 end
 
-function clear_query_and_search(text)
-    reset_search_bar()
-    search_for_text(text)
-end
-
-function reset_search_bar()
-    utils:emulate_user_keypress(def_keymaps.clear_search)
-    utils:emulate_user_keypress(def_keymaps.focus_search)
-end
-
-function search_for_text(text)
-    utils:emulate_user_typing(text)
-    utils:emulate_user_keypress(def_keymaps.next_result)
-end
-
-function search_multiple_items(searches)
-    for _, search in pairs(searches) do
-        clear_query_and_search(search)
-    end
-    reset_search_bar()
-end
 describe('Functional: History', function ()
 
     before_each(function ()
@@ -79,27 +59,27 @@ describe('Functional: History', function ()
         utils:open_test_buffer(test_buf)
         utils:emulate_user_keypress(def_keymaps.focus_search)
         assert.equals(#history.entries, 0)
-        search_for_text(search_text)
+        func_helpers:search_for_text(search_text)
         utils:async_asserts(consts.test.async_delay, async_check_added_entry, history, search_text, 1)
 
         search_text = "promise"
-        clear_query_and_search(search_text)
+        func_helpers:clear_query_and_search(search_text)
         utils:async_asserts(consts.test.async_delay, async_check_added_entry, history, search_text, 2)
 
         search_text = "Eric Spidle is so cool" -- not in the buffer
-        clear_query_and_search(search_text)
+        func_helpers:clear_query_and_search(search_text)
         utils:async_asserts(consts.test.async_delay, async_check_added_entry, history, search_text, 3)
 
         search_text = "const map = new"
-        clear_query_and_search(search_text)
+        func_helpers:clear_query_and_search(search_text)
         utils:async_asserts(consts.test.async_delay, async_check_added_entry, history, search_text, 4)
 
         search_text = "abcdefghijklmnopqrstuvwxyz[]*@($@)!---="
-        clear_query_and_search(search_text)
+        func_helpers:clear_query_and_search(search_text)
         utils:async_asserts(consts.test.async_delay, async_check_added_entry, history, search_text, 5)
 
         search_text = "                                             "
-        clear_query_and_search(search_text)
+        func_helpers:clear_query_and_search(search_text)
         utils:async_asserts(consts.test.async_delay, async_check_added_entry, history, search_text, 6)
 
     end)
@@ -108,7 +88,7 @@ describe('Functional: History', function ()
         local test_buf = "c_buffer.c"
         local searches = {"define", "->", "int", "const", "node *", "state", "create_"}
         utils:open_test_buffer(test_buf)
-        search_multiple_items(searches)
+        func_helpers:search_multiple_items(searches)
         utils:emulate_user_keypress(def_keymaps.focus_search)
 
         utils:keycodes_user_keypress(def_keymaps.next_history)
@@ -159,22 +139,22 @@ describe('Functional: History', function ()
         utils:emulate_user_typing(search_text)
 
         utils:async_asserts(consts.test.async_delay, async_check_only_searches, scout.search_bar, search_text, 0)
-        reset_search_bar()
+        func_helpers:reset_search_bar()
         search_text = "Eric Spidle"
         utils:emulate_user_typing(search_text)
         utils:async_asserts(consts.test.async_delay, async_check_only_searches, scout.search_bar, search_text, 0)
 
-        reset_search_bar()
+        func_helpers:reset_search_bar()
         search_text = "Should not show up in history"
         utils:emulate_user_typing(search_text)
         utils:async_asserts(consts.test.async_delay, async_check_only_searches, scout.search_bar, search_text, 0)
 
-        reset_search_bar()
+        func_helpers:reset_search_bar()
         search_text = "Never ever should be in history"
         utils:emulate_user_typing(search_text)
         utils:async_asserts(consts.test.async_delay, async_check_only_searches, scout.search_bar, search_text, 0)
 
-        reset_search_bar()
+        func_helpers:reset_search_bar()
         search_text = "OK you should show up"
         utils:emulate_user_typing(search_text)
         utils:emulate_user_keypress(def_keymaps.prev_result)
@@ -186,14 +166,14 @@ describe('Functional: History', function ()
         local searches = {"wait it's all javascript???","wait it's all javascript???", "wait it's all javascript???" }
         local history = scout.search_bar.history
         utils:open_test_buffer(test_buf)
-        search_multiple_items(searches)
+        func_helpers:search_multiple_items(searches)
 
         utils:keycodes_user_keypress(def_keymaps.next_history)
         utils:async_asserts(consts.test.async_delay, async_check_same_search, history, 1)
 
         -- any repeated search WILL be added again so long as it's not a consecutive entry(much like bash history :) )
         searches = {"wait it's all javascript???","sure is", "wait it's all javascript???", "sure is", "sure is", "no wait it's all javascript???","no wait it's all javascript??" }
-        search_multiple_items(searches)
+        func_helpers:search_multiple_items(searches)
         utils:async_asserts(consts.test.async_delay, async_check_same_search, history, 6)
     end)
 end)
