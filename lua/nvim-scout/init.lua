@@ -46,8 +46,13 @@ end
 
 function M.update_scout_context(ev)
     local enterBuf = ev.buf
-    if vim.api.nvim_buf_is_valid(enterBuf) and enterBuf ~= M.search_bar.query_buffer then
-        M.search_bar.highlighter:update_hl_context(ev.buf, M.search_bar.query_buffer)
+    if vim.api.nvim_buf_is_valid(enterBuf) then
+        if enterBuf ~= M.search_bar.query_buffer then
+            M.search_bar.highlighter:update_hl_context(ev.buf, M.search_bar.query_buffer)
+        else
+            local file_buf = vim.api.nvim_win_get_buf(M.search_bar.host_window)
+            M.search_bar.highlighter:update_hl_context(file_buf, M.search_bar.query_buffer)
+        end
     end
 end
 
