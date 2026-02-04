@@ -14,7 +14,8 @@ function scout_pattern_handler:wait_to_search(pattern)
     local delay = false
     local open_count = 0
     local close_count = 0
-    if string.sub(pattern, -1) == "%" then -- lua patterns can't end with %
+    local last_char = string.sub(pattern, -1)
+    if last_char == "%" or last_char == "[" then -- lua patterns can't end with %
         delay = true
     end
 
