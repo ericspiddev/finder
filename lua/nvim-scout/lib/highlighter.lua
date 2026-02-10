@@ -108,9 +108,6 @@ function scout_highlighter:highlight_file_by_pattern(win_buf, pattern)
     local pattern_match = not exact_match
 
     if pattern_match then
-        if pattern_handler:wait_to_search(pattern) then
-            return
-        end
         pattern = pattern_handler:escape_pattern_characters(pattern)
     end
 
@@ -119,28 +116,47 @@ function scout_highlighter:highlight_file_by_pattern(win_buf, pattern)
         local search_index = 1
         line, pattern = self.mode_mgr:apply_modes_to_search_text(line, pattern)
 
-        local pattern_start, pattern_end = string.find(line, pattern, 1, exact_match) -- find the pattern here...
-         while pattern_start ~= nil and match_count < consts.search.max_results do
+        local success, pattern_start, pattern_end = self:protected_search(line, pattern, 1, exact_match, win_buf)
+
+        if not success then
+            return
+        end
+         while pattern_start ~= nil do
              -- highlight with start index and end index
             self:highlight_pattern_in_line(line_number - 1, pattern_start - 1, pattern_end)
             search_index = pattern_end + 1
-            pattern_start, pattern_end = string.find(line, pattern, search_index, exact_match) -- hmmm
-            match_count = match_count + 1
+            success, pattern_start, pattern_end = self:protected_search(line, pattern, search_index, exact_match, win_buf)
+
+            if not success then
+                return
+            end
          end
     end
 
     if #self.matches > 0 then
-        --vim.print("matches > 0... index is " .. self.match_index .. " and matches holds " .. #self.matches)
         self:update_match_count(win_buf)
     end
 
-    if match_count == consts.search.max_results then
-            Scout_Logger:error_print("Current search exceeded max search results pattern: ", pattern)
-            Scout_Logger:error_print("Be careful with lua pattern searches as they can lead to quadratic time searches")
-            self:clear_highlights(self.hl_buf, win_buf)
+function scout_highlighter:protected_search(line, pattern, start_index, exact_match, win_buf)
+    local success, err_or_start, pattern_end = pcall(string.find, line, pattern, start_index, exact_match)
+    if not success then
+        local error = err_or_start
+        if error:find("malformed pattern") or error:find("unbalanced pattern") or error:find("invalid capture index")then
+            self:show_invalid_pattern(win_buf)
+        else
+            Scout_Logger:error_print("Error while searching ", error)
+        end
     end
+
+    return success, err_or_start, pattern_end
 end
 
+function scout_highlighter:show_invalid_pattern(buffer)
+    self.hl_wc_ext_id = self.hl_fns.highlight(buffer, self.hl_namespace, 0, -1, {
+            virt_text = { { "Invalid Pattern", "Comment" } },
+            virt_text_pos = "right_align",
+        })
+end
 -------------------------------------------------------------
 --- highlighter.clear_match_count: clear the match count that
 --- tracks current search result in the search window
