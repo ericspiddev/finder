@@ -111,11 +111,12 @@ function scout_highlighter:highlight_file_by_pattern(win_buf, pattern)
         pattern = pattern_handler:escape_pattern_characters(pattern)
     end
 
-    local match_count = 0
+    local start_time = os.clock()
     for line_number, line in ipairs(self.hl_context) do
         local search_index = 1
         line, pattern = self.mode_mgr:apply_modes_to_search_text(line, pattern)
 
+        local run_time = os.clock() - start_time
         local success, pattern_start, pattern_end = self:protected_search(line, pattern, 1, exact_match, win_buf)
 
         if not success then
@@ -130,12 +131,31 @@ function scout_highlighter:highlight_file_by_pattern(win_buf, pattern)
             if not success then
                 return
             end
+
+            if pattern_start and pattern_end then
+                if pattern_start > #line then
+                    break
+                end
+                -- dangerous patterns can get stuck on an index reset us here to finish out the search
+                if pattern_end < pattern_start then
+                    pattern_end = pattern_start
+                end
+            end
+
+            if run_time >= 1 then
+                Scout_Logger:error_print("Current search exceeded max search time of 1 second pattern: ", pattern)
+                Scout_Logger:error_print("You should make your pattern searches as specific as possible as they can lead to quadratic time searches")
+                self:clear_highlights(self.hl_buf, win_buf)
+                return
+            end
+            run_time = os.clock() - start_time
          end
     end
 
     if #self.matches > 0 then
         self:update_match_count(win_buf)
     end
+end
 
 function scout_highlighter:protected_search(line, pattern, start_index, exact_match, win_buf)
     local success, err_or_start, pattern_end = pcall(string.find, line, pattern, start_index, exact_match)
@@ -203,9 +223,12 @@ end
 --- @word_end: end index (col) of the word on the line
 ---
 function scout_highlighter:highlight_pattern_in_line(line_number, word_start, word_end)
-    local extmark_id = self.hl_fns.highlight(self.hl_buf, self.hl_namespace, line_number, word_start,
-        { end_col = word_end, hl_group = self.result_hl_style })
-    table.insert(self.matches, match_obj:new(line_number + 1, word_start, word_end, extmark_id))
+
+    if word_start < word_end then
+        local extmark_id = self.hl_fns.highlight(self.hl_buf, self.hl_namespace, line_number, word_start,
+            { end_col = word_end, hl_group = self.result_hl_style })
+        table.insert(self.matches, match_obj:new(line_number + 1, word_start, word_end, extmark_id))
+    end
 end
 
 -------------------------------------------------------------
