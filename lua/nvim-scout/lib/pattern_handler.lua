@@ -9,37 +9,10 @@ function scout_pattern_handler:new(escape_chars)
     return setmetatable(obj, self)
 end
 
-
-function scout_pattern_handler:wait_to_search(pattern)
-    local delay = false
-    local open_count = 0
-    local close_count = 0
-    local last_char = string.sub(pattern, -1)
-    if last_char == "%" or last_char == "[" then -- lua patterns can't end with %
-        delay = true
-    end
-
-    if pattern == "[]" then
-        delay = true
-    end
-
-    for index = 1, #pattern do
-        local char = pattern:sub(index, index)
-        if char == "[" then
-            open_count = open_count + 1
-        elseif char == "]" then
-            close_count = close_count + 1
-        end
-     end
-    if open_count ~= close_count then
-        delay = true
-    end
-
-    return delay
-end
-
 function scout_pattern_handler:escape_pattern_characters(pattern)
-
+    if pattern:sub(1,2) == "%b" then -- handle case of balance modifer which needs to see () to actually match proper
+        return pattern
+    end
     for _, escape_char in ipairs(self.escape_chars) do
         pattern = string.gsub(pattern,"%" .. escape_char, "%%".. escape_char)
     end

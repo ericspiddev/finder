@@ -93,7 +93,7 @@ function scout_mode_manager:apply_modes_to_search_text(line, pattern)
 end
 
 function scout_mode_manager:apply_match_case(line, pattern)
-    if not self:get_mode_status(consts.modes.case_sensitive) then
+    if not self:get_mode_status(consts.modes.case_sensitive) and not self:get_mode_status(consts.modes.lua_pattern) then
         line = string.lower(line)
         pattern = string.lower(pattern)
     end
