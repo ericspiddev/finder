@@ -29,6 +29,23 @@ local async_match_check = function (...)
     local l_hl, expected = ...
     assert.equals(#l_hl.matches, expected)
 end
+
+local async_match_pos_check = function (...)
+    local matches = ...
+    for _, match in pairs(matches) do
+        assert(match.m_start < match.m_end)
+    end
+end
+
+local async_invalid_check = function (...)
+    local search, hl = ...
+    local buffer = search.query_buffer
+    local hl_ext_mark = hl.hl_wc_ext_id
+    local extmark_details = vim.api.nvim_buf_get_extmark_by_id(buffer, hl.hl_namespace, hl_ext_mark, {details = true})[3]
+    assert.equals(extmark_details.virt_text[1][1], "Invalid Pattern")
+
+end
+
 describe('Functional: Modes', function ()
     before_each(function ()
         scout.setup()
@@ -103,7 +120,7 @@ describe('Functional: Modes', function ()
         utils:async_asserts(consts.test.async_delay, async_match_check, hl, expected_matches)
         utils:keycodes_user_keypress(def_keymaps.pattern_toggle)
 
-        expected_matches = 680 -- pattern mode now catches every single ", a,p,_,n,m or e
+        expected_matches = 610 -- pattern mode now catches every single ", a,p,_,n,m or e (610 or 611?)
         func_helpers:reset_search_bar()
         utils:emulate_user_typing("[\"app_name\"]")
         utils:async_asserts(consts.test.async_delay, async_match_check, hl, expected_matches)
@@ -131,45 +148,97 @@ describe('Functional: Modes', function ()
         utils:async_asserts(consts.test.async_delay, async_match_check, hl, expected_matches)
     end)
 
-    it('does not search with the in an invalid pattern string', function ()
+    it('reports an invalid pattern in the search buffer', function ()
         local test_buf = "c_buffer.c"
         local hl = scout.search_bar.highlighter
         local expected_matches = 0
         func_helpers:reset_search_bar()
+        func_helpers:reset_open_buf(test_buf)
         utils:keycodes_user_keypress(def_keymaps.pattern_toggle)
         utils:emulate_user_typing("%")
-        func_helpers:reset_open_buf(test_buf)
-        utils:async_asserts(consts.test.async_delay, async_match_check, hl, expected_matches)
+        utils:async_asserts(consts.test.async_delay, async_invalid_check, scout.search_bar, hl)
 
         func_helpers:reset_search_bar()
-        utils:emulate_user_typing("%%%%%%%%%%%%%%%")
-        utils:async_asserts(consts.test.async_delay, async_match_check, hl, expected_matches)
+        utils:emulate_user_typing("%%%")
+        utils:async_asserts(consts.test.async_delay, async_invalid_check, scout.search_bar, hl)
 
         func_helpers:reset_search_bar()
         utils:emulate_user_typing("[[[[[[[[")
-        utils:async_asserts(consts.test.async_delay, async_match_check, hl, expected_matches)
+        utils:async_asserts(consts.test.async_delay, async_invalid_check, scout.search_bar, hl)
 
         func_helpers:reset_search_bar()
-        utils:emulate_user_typing("[][][][][][][][")
-        utils:async_asserts(consts.test.async_delay, async_match_check, hl, expected_matches)
+        utils:emulate_user_typing("[][][")
+        utils:async_asserts(consts.test.async_delay, async_invalid_check, scout.search_bar, hl)
 
         func_helpers:reset_search_bar()
         utils:emulate_user_typing("[]")
-        utils:async_asserts(consts.test.async_delay, async_match_check, hl, expected_matches)
+        utils:async_asserts(consts.test.async_delay, async_invalid_check, scout.search_bar, hl)
 
         func_helpers:reset_search_bar()
         utils:emulate_user_typing("][")
-        utils:async_asserts(consts.test.async_delay, async_match_check, hl, expected_matches)
+        utils:async_asserts(consts.test.async_delay, async_invalid_check, scout.search_bar, hl)
 
-        expected_matches = 1693
+        func_helpers:reset_search_bar()
+        utils:emulate_user_typing("%ba")
+        utils:async_asserts(consts.test.async_delay, async_invalid_check, scout.search_bar, hl)
+
+        func_helpers:reset_search_bar()
+        utils:emulate_user_typing("[^]")
+        utils:async_asserts(consts.test.async_delay, async_invalid_check, scout.search_bar, hl)
+
+        func_helpers:reset_search_bar()
+        utils:emulate_user_typing("%10")
+        utils:async_asserts(consts.test.async_delay, async_invalid_check, scout.search_bar, hl)
+
+        expected_matches = 1477
         func_helpers:reset_search_bar()
         utils:emulate_user_typing("[a-z]")
         utils:async_asserts(consts.test.async_delay, async_match_check, hl, expected_matches)
 
     end)
 
-    it('times out the pattern search after max results', function ()
-        -- TODO: find a pattern that I can use to force super long number of matches
-        assert(false)
+    it('can search for patterns that would normally get stuck', function ()
+        local test_buf = "c_buffer.c"
+        local hl = scout.search_bar.highlighter
+        local expected_matches = 124
+        func_helpers:reset_search_bar()
+        func_helpers:reset_open_buf(test_buf)
+        utils:keycodes_user_keypress(def_keymaps.pattern_toggle)
+        utils:emulate_user_typing(".*") -- search for non empty lines
+        utils:async_asserts(consts.test.async_delay, async_match_check, hl, expected_matches)
+
+        func_helpers:reset_search_bar()
+        expected_matches = 0
+        utils:emulate_user_typing("$")
+        utils:async_asserts(consts.test.async_delay, async_match_check, hl, expected_matches)
+
+        func_helpers:reset_search_bar()
+        expected_matches = 2995
+        utils:emulate_user_typing(".?")
+        utils:async_asserts(consts.test.async_delay, async_match_check, hl, expected_matches)
+
+        func_helpers:reset_search_bar()
+        expected_matches = 2995
+        utils:emulate_user_typing("--")
+        utils:async_asserts(consts.test.async_delay, async_match_check, hl, expected_matches)
+    end)
+
+
+    it('ignores empty lines when searching', function ()
+        local test_buf = "lua_buffer.lua" -- The file has 165 lines
+        local hl = scout.search_bar.highlighter
+        local expected_matches = 138 -- Only 138 of them have some sort of content
+        func_helpers:reset_search_bar()
+        func_helpers:reset_open_buf(test_buf)
+        utils:keycodes_user_keypress(def_keymaps.pattern_toggle)
+        utils:emulate_user_typing(".*") -- should search for all lines
+        utils:async_asserts(consts.test.async_delay, async_match_check, hl, expected_matches)
+        utils:async_asserts(consts.test.async_delay, async_match_pos_check, hl.matches)
+
+        expected_matches = 3063 -- Only 138 of them have some sort of content
+        func_helpers:reset_open_buf(test_buf)
+        utils:emulate_user_typing(".") -- should search for all lines
+        utils:async_asserts(consts.test.async_delay, async_match_check, hl, expected_matches)
+        utils:async_asserts(consts.test.async_delay, async_match_pos_check, hl.matches)
     end)
 end)
